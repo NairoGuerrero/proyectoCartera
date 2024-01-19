@@ -1,0 +1,45 @@
+SOFTWARE GESTIÓN DE CARTERA
+
+	PERFIL CONTADOR
+		Crear clientes
+		Crear contratos
+		Ingresar pagos
+
+
+	PERFIL COMERCIAL
+		Solo puede visualizar contratos y pagos (de él)
+
+		
+	CLIENTES		
+		Nombre
+		Correo
+		Dirección
+		NIT / Cedula
+		Ciudad
+
+
+	CONTRATOS
+		Numero de contrato
+		Asesor
+		Cliente
+		Valor
+		Descripción
+		Posibilidad de agregar anexos (modifican el valor)
+		Fecha inicial
+		Fecha final
+
+
+	PAGOS
+		Buscar por cliente y contrato
+		
+		TIPOS DE PAGO:
+			Recibo de caja
+			Factura
+		
+		Valor a pagar
+		Fecha pago
+		
+		Con cada pago se descuenta al valor total del contrato (saldo)
+
+
+
