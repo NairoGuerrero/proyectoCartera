@@ -7,12 +7,12 @@
         <div class="card-body">
             <form method="POST" class="form-control">
                 {% csrf_token %}
-                <label class="form-label"> # Contrato: {{ Numero_Contrato }}</label>
-                <label class="form-label"> Cliente: {{ cliente }}</label>
-                <label class="form-label"> Valor: {{ valor }}</label>
-                <label class="form-label"> Descripcion: {{ descripcion }}</label>
-                <label class="form-label"> Fecha inicial: {{ Fecha_Inicial }}</label>
-                {{ form.as_p }}
+                <div class="row"><label class="form-label"> # Contrato: {{ Numero_Contrato }}</label></div>
+                <div><label class="form-label"> Cliente: {{ cliente }}</label></div>
+                <div><label class="form-label"> Valor: {{ valor }}</label></div>
+                <div><label class="form-label"> Descripcion: {{ descripcion }}</label></div>
+                <div><label class="form-label"> Fecha inicial: {{ Fecha_Inicial }}</label></div>
+                <div>{{ form.as_p }}</div>
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Actualizar</button>
                 </div>
