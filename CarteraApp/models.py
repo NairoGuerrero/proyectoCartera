@@ -1,6 +1,5 @@
 from django.db import models
 
-
 # Create your models here.
 
 class Clientes(models.Model):
@@ -23,7 +22,23 @@ class Contratos(models.Model):
     descripcion = models.CharField(max_length=255)
     Fecha_Inicial = models.DateField()
     Fecha_Final = models.DateField(blank=True, null=True)
+    archivo_contrato = models.FileField(upload_to='Contratos/')
 
     def __str__(self):
-        texto = "{0} {1} {2} {3} {4} {5} {6}"
-        return texto.format(self.Numero_Contrato, self.asesor, self.cliente.cedula, self.valor, self.descripcion, self.Fecha_Inicial, self.Fecha_Final)
+        texto = "{0} - {1}"
+        return texto.format(self.Numero_Contrato, self.asesor)
+
+class Pagos(models.Model):
+    tipo_pago_opciones = [
+        ('recibo_de_caja', 'Recibo de Caja'),
+        ('factura', 'Factura'),
+    ]
+    numero_contrato = models.ForeignKey(Contratos, on_delete=models.CASCADE)
+    tipo_pago = models.CharField(max_length=20, choices=tipo_pago_opciones)
+    valor_pago = models.IntegerField()
+    fecha_pago = models.DateField()
+    archivo_pago = models.FileField(upload_to='Recibos/')
+
+    def __str__(self):
+        texto = "{0} - {1}"
+        return texto.format(self.numero_contrato, self.tipo_pago, self.valor_pago, self.fecha_pago)

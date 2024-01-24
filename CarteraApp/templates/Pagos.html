@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col">
+            <h1>Pagos</h1>
+            <div class="table-responsive py-2">
+                <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th># Contrato</th>
+                        <th>Tipo de pago</th>
+                        <th>Valor</th>
+                        <th>Fecha de pago</th>
+                        <th>Archivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for infoPago in Pagos %}
+                        <tr>
+                            <td>{{infoPago.numero_contrato.Numero_Contrato}}</td>
+                            <td>{{infoPago.get_tipo_pago_display}}</td>
+                            <td>{{infoPago.valor_pago}}</td>
+                            <td>{{infoPago.fecha_pago}}</td>
+                            <td><a href="/./../media/{{ infoPago.archivo_pago }}" target="_blank">{{ infoPago.archivo_pago }}</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="row"><label class="form-label"> Valor Contrato : {{ datos.0 }}</label></div>
+        <div class="row"><label class="form-label"> Valor Pagos :  {{ datos.1 }}</label></div>
+        <div class="row"><label class="form-label"> Saldo :  {{ datos.2 }}</label></div>
+    </div>
+    <div class="row">
+       <a href="/AgregarPagosVista/{{ contrato }}" class="btn btn-info">Realizar pago</a>
+    </div>
+{% endblock %}

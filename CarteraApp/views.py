@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Clientes, Contratos
+from .models import *
 from .forms import *
 # Create your views here.
 
@@ -34,6 +34,7 @@ def editar_contrato_vista(request, Numero_Contrato):
         'valor': contrato.valor,
         'descripcion': contrato.descripcion,
         'Fecha_Inicial': contrato.Fecha_Inicial,
+        'archivo_contrato' : contrato.archivo_contrato,
         'form': ActualizarContrato(instance=contrato),
     }
     if request.method == 'POST':
@@ -81,3 +82,27 @@ def editar_cliente_vista(request, cedula):
             data["form"] = formulario
 
     return render(request, "EditarCliente.html", data)
+
+def pagos(request, Numero_Contrato):
+    pagos = Pagos.objects.filter(numero_contrato__Numero_Contrato= Numero_Contrato)
+    valor_contrato = Contratos.objects.get(Numero_Contrato=Numero_Contrato).valor
+    valores_pago = sum(list(pagos.values_list('valor_pago', flat=True)))
+    saldo = valor_contrato - valores_pago
+
+
+    return render(request, "Pagos.html", {"Pagos": pagos, 'datos': [valor_contrato, valores_pago, saldo],'contrato': Numero_Contrato })
+
+def agregar_pago_vista(request, Numero_Contrato):
+
+    data = {
+        'formu': AgregarPago(initial={'numero_contrato': Numero_Contrato})
+    }
+
+    if request.method == 'POST':
+        formulario = AgregarPago(data=request.POST, files=request.FILES)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect('/Pagos/' + str(Numero_Contrato))
+        else:
+            data["form"] = formulario
+    return render(request, "CrearPago.html", data)

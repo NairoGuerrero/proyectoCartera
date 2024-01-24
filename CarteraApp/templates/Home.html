@@ -17,6 +17,7 @@
                         <th>Descripcion</th>
                         <th>Fecha Inicial</th>
                         <th>Fecha Final</th>
+                        <th>Archivo</th>
                         <th>Opcion</th>
                     </tr>
                 </thead>
@@ -30,7 +31,9 @@
                             <td>{{ infoContrato.descripcion }}</td>
                             <td>{{ infoContrato.Fecha_Inicial }}</td>
                             <td>{{ infoContrato.Fecha_Final }}</td>
+                            <td><a href="media/{{ infoContrato.archivo_contrato }}" target="_blank">{{ infoContrato.archivo_contrato }}</a></td>
                             <td><a href="editarContratoVista/{{ infoContrato.Numero_Contrato }}" class="btn btn-info">Editar</a></td>
+                            <td><a href="Pagos/{{ infoContrato.Numero_Contrato }}" class="btn btn-info">Pagos</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>
