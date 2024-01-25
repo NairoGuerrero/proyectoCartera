@@ -9,6 +9,7 @@ urlpatterns = [
     path('editarContratoVista/<Numero_Contrato>', views.editar_contrato_vista, name='editar_contrato'),
     path('Pagos/<Numero_Contrato>', views.pagos),
     path('AgregarPagosVista/<Numero_Contrato>', views.agregar_pago_vista),
+    path('EditarPagoVista/<id>', views.editar_pago_vista),
     path('Clientes/', views.clientes, name='clientes'),
     path('AgregarClienteVista/', views.agregar_cliente_vista, name='agregar_cliente'),
     path('EliminacionCliente/<cedula>', views.eliminar_cliente),

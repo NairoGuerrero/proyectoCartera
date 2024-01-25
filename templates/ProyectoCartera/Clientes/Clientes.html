@@ -1,0 +1,89 @@
+{% extends "ProyectoCartera/base.html" %}
+
+
+
+{% block title %}Clientes{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col">
+            <h1>Clientes</h1>
+            <div class="table-responsive py-2">
+                <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nit/Cedula</th>
+                        <th>Nombre</th>
+                        <th>Correo</th>
+                        <th>Ciudad</th>
+                        <th>Direccion</th>
+                        <th>Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for infoCliente in Clientes %}
+                        <tr>
+                            <td>{{ infoCliente.cedula }}</td>
+                            <td>{{ infoCliente.nombre }}</td>
+                            <td>{{ infoCliente.correo}}</td>
+                            <td>{{ infoCliente.ciudad }}</td>
+                            <td>{{ infoCliente.direccion }}</td>
+                            <td><a href="/editarClienteVista/{{ infoCliente.cedula }}" class="btn btn-info">Editar</a></td>
+                            <td><button onclick="eliminarCliente({{ infoCliente.cedula }})" class="btn btn-danger">Eliminar</button></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+
+        </div>
+    </div>
+    <div class="row">
+        <a href="{% url 'agregar_cliente' %}" class="btn btn-primary"> Agregar Cliente </a>
+    </div>
+
+    {% if messages %}
+            {% for mensaje in messages %}
+                {% if mensaje.tags == 'success' %}
+                    <script>
+                        Swal.fire({
+                            title: "{{ mensaje }}",
+                            icon: "success"
+                        });
+                    </script>
+
+                {% elif mensaje.tags == 'danger' %}
+                    <script>
+                        Swal.fire({
+                            title: "ERROR!",
+                            text: "{{ mensaje }}",
+                            icon: "error"
+                        });
+                    </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+    {% block js %}
+        <script>
+            function eliminarCliente(id){
+                Swal.fire({
+                      title: "¿Esta seguro que quiere eliminar el cliente?",
+                      text: "Esta accion no es reversible!",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3085d6",
+                      cancelButtonColor: "#d33",
+                      confirmButtonText: "Eliminar"
+                }).then((result) => {
+                      if (result.isConfirmed) {
+                          window.location.href = "/EliminacionCliente/" + id
+                      }
+                });
+            }
+        </script>
+    {% endblock %}
+{% endblock %}
+
+
+

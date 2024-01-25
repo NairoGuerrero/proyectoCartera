@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "ProyectoCartera/base.html" %}
 
 {% block title %}Clientes{% endblock %}
 
@@ -15,6 +15,7 @@
                         <th>Valor</th>
                         <th>Fecha de pago</th>
                         <th>Archivo</th>
+                        <th>Opcion</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,6 +26,7 @@
                             <td>{{infoPago.valor_pago}}</td>
                             <td>{{infoPago.fecha_pago}}</td>
                             <td><a href="/./../media/{{ infoPago.archivo_pago }}" target="_blank">{{ infoPago.archivo_pago }}</a></td>
+                            <td><a href="/EditarPagoVista/{{ infoPago.id }}" class="btn btn-info">Editar</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -39,6 +41,20 @@
         <div class="row"><label class="form-label"> Saldo :  {{ datos.2 }}</label></div>
     </div>
     <div class="row">
-       <a href="/AgregarPagosVista/{{ contrato }}" class="btn btn-info">Realizar pago</a>
+        {% if datos.2 > 0 %}
+            <a href="/AgregarPagosVista/{{ contrato }}" class="btn btn-info">Realizar pago</a>
+        {% else %}
+            <button class="btn btn-info" disabled>Realizar pago</button>
+        {% endif %}
     </div>
+    {% if messages %}
+        {% for mensaje in messages %}
+            <script>
+                Swal.fire({
+                    "title" : "{{ mensaje }}",
+                    "icon" : "success"
+                })
+            </script>
+        {% endfor %}
+    {% endif %}
 {% endblock %}

@@ -33,7 +33,7 @@ class CrearContrato(forms.ModelForm):
 class ActualizarContrato(forms.ModelForm):
     class Meta:
         model = Contratos
-        fields = ['asesor', 'Fecha_Final']
+        fields = ['asesor', 'Fecha_Final', 'descripcion']
         widgets = {
             'Fecha_Inicial': forms.DateInput(attrs={'type': 'date'}),
             'Fecha_Final': forms.DateInput(attrs={'type': 'date'}),
@@ -42,7 +42,6 @@ class ActualizarContrato(forms.ModelForm):
 class AgregarPago(forms.ModelForm):
     class Meta:
         model =  Pagos
-        #fields = ['tipo_pago', 'valor_pago', 'fecha_pago', 'archivo_pago']
         fields = '__all__'
         labels = {
             'numero_contrato': '# Contrato',
@@ -51,4 +50,12 @@ class AgregarPago(forms.ModelForm):
             'fecha_pago': forms.DateInput(attrs={'type': 'date'}),
             'numero_contrato': forms.HiddenInput(),
 
+        }
+
+class EditarPago(forms.ModelForm):
+    class Meta:
+        model = Pagos
+        fields = ['archivo_pago']
+        widgets = {
+            'fecha_pago': forms.DateInput(attrs={'type': 'date'}),
         }
