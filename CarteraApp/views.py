@@ -7,13 +7,38 @@ from .Funciones import *
 
 def home(request):
     contrato=list(Contratos.objects.all().values())
-    print(contrato)
-
-    return render(request, "ProyectoCartera/Contratos/Home.html", {"Contratos":contrato})
+    # Crear una lista de listas con los valores de cada contrato
+    contrato_lista = [
+        [
+            infoContrato['Numero_Contrato'],
+            infoContrato['asesor'],
+            infoContrato['cliente_id'],
+            infoContrato['valor'],
+            infoContrato['descripcion'],
+            infoContrato['Fecha_Inicial'].strftime('%Y-%m-%d') if infoContrato['Fecha_Inicial'] else '',
+            infoContrato['Fecha_Final'].strftime('%Y-%m-%d') if infoContrato['Fecha_Final'] else '',
+            infoContrato['archivo_contrato'],
+            ""
+        ]
+        for infoContrato in contrato
+    ]
+    print(contrato_lista)
+    return render(request, "ProyectoCartera/Contratos/Home.html", {"Contratos":contrato_lista})
 
 def clientes(request):
-    cliente = Clientes.objects.all()
-    return render(request, "ProyectoCartera/Clientes/Clientes.html", {"Clientes": cliente})
+    cliente = list(Clientes.objects.all().values())
+    clientes_vista = [
+        [
+            infocliente['cedula'],
+            infocliente['nombre'],
+            infocliente['correo'],
+            infocliente['ciudad'],
+            infocliente['direccion'],
+            ""
+        ]
+        for infocliente in cliente
+    ]
+    return render(request, "ProyectoCartera/Clientes/Clientes.html", {"Clientes": clientes_vista})
 
 def agregar_contrato_vista(request):
     data = {

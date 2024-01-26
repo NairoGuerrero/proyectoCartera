@@ -5,42 +5,42 @@
 {% block title %}Clientes{% endblock %}
 
 {% block body %}
-    <div class="row">
-        <div class="col">
-            <h1>Clientes</h1>
-            <div class="table-responsive py-2">
-                <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Nit/Cedula</th>
-                        <th>Nombre</th>
-                        <th>Correo</th>
-                        <th>Ciudad</th>
-                        <th>Direccion</th>
-                        <th>Opciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for infoCliente in Clientes %}
-                        <tr>
-                            <td>{{ infoCliente.cedula }}</td>
-                            <td>{{ infoCliente.nombre }}</td>
-                            <td>{{ infoCliente.correo}}</td>
-                            <td>{{ infoCliente.ciudad }}</td>
-                            <td>{{ infoCliente.direccion }}</td>
-                            <td><a href="/editarClienteVista/{{ infoCliente.cedula }}" class="btn btn-info">Editar</a></td>
-                            <td><button onclick="eliminarCliente({{ infoCliente.cedula }})" class="btn btn-danger">Eliminar</button></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            </div>
 
-        </div>
+    <div class="table-responsive m-5">
+         <table id="example" class="display nowrap" width="100%"></table>
     </div>
-    <div class="row">
+    <div class="row m-5">
         <a href="{% url 'agregar_cliente' %}" class="btn btn-primary"> Agregar Cliente </a>
     </div>
+    <script>
+        $('#example').DataTable({
+            fixedHeader: true,
+            responsive: true,
+            language: {
+                "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+            },
+            columns: [
+                { title: 'Contrato' },
+                { title: 'Asesor' },
+                { title: 'Cliente' },
+                { title: 'Valor.' },
+                { title: 'Descripcion' },
+                {
+                    title: 'Acciones',
+                    render: function (data, type, row, meta) {
+                        return '<button class="btn btn-info" onclick="editarcliente(' + row[0] +')">Editar</button> ' +
+                            ' <button class="btn btn-danger" onclick="eliminarCliente(' + row[0] +')">Eliminar</button>';
+                    }
+                }
+            ],
+            data: {{ Clientes|safe }}
+        });
+
+        function editarcliente(contratoId) {
+            window.location.href = "/editarClienteVista/" + contratoId.toString()
+        }
+    </script>
+
 
     {% if messages %}
             {% for mensaje in messages %}
