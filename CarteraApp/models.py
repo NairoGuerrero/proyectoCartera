@@ -21,7 +21,7 @@ class Contratos(models.Model):
     valor = models.IntegerField()
     Fecha_Inicial = models.DateField()
     Fecha_Final = models.DateField(blank=True, null=True)
-    archivo_contrato = models.FileField(upload_to='Contratos/')
+    archivo_contrato = models.FileField(upload_to='Contratos/', blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
 
     def __str__(self):

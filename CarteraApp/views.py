@@ -3,27 +3,72 @@ from .models import *
 from .forms import *
 from django.contrib import messages
 from .Funciones import *
-# Create your views here.
+import json
+from django_datatables_view.base_datatable_view import BaseDatatableView
+from django.http import JsonResponse
+from django.db.models import Q
+import random
+from faker import Faker
+from datetime import datetime, timedelta
+
+class ContratosListJson(BaseDatatableView):
+    model = Contratos
+    columns = ['Numero_Contrato', 'asesor', 'cliente_id', 'valor', 'descripcion', 'Fecha_Inicial', 'Fecha_Final', 'archivo_contrato']
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super(ContratosListJson, self).dispatch(request, *args, **kwargs)
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+    def render_column(self, row, column):
+        if column in ['Fecha_Inicial', 'Fecha_Final']:
+            return getattr(row, column).strftime('%Y-%m-%d') if getattr(row, column) else ''
+        elif column == 'archivo_contrato':
+             return '<a href="media/' + getattr(row, column) + '" target="_blank"><img src="{% static '' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>'
+        else:
+            return super(ContratosListJson, self).render_column(row, column)
+
+    def filter_queryset(self, qs):
+        # Obtén el valor de búsqueda proporcionado por el usuario
+        search = self.request.GET.get('search[value]', None)
+
+        # Aplica el filtro solo si hay un valor de búsqueda
+        if search:
+            # Define las condiciones de búsqueda utilizando Q objects
+            search_conditions = (
+                Q(Numero_Contrato=search) |
+                Q(cliente_id=search)
+
+            )
+
+            # Aplica el filtro a la queryset
+            qs = qs.filter(search_conditions)
+
+        # Devuelve la queryset filtrada
+        return qs
+
+    def prepare_results(self, qs):
+        data = []
+        for item in qs:
+            try:
+                archivo = item.archivo_contrato.url
+            except:
+                archivo = ''
+            data.append({
+                'Numero_Contrato': item.Numero_Contrato,
+                'asesor': item.asesor,
+                'cliente_id': item.cliente_id,
+                'valor': item.valor,
+                'descripcion': item.descripcion,
+                'Fecha_Inicial': item.Fecha_Inicial.strftime('%Y-%m-%d') if item.Fecha_Inicial else '',
+                'Fecha_Final': item.Fecha_Final.strftime('%Y-%m-%d') if item.Fecha_Final else '',
+                'archivo_contrato': archivo
+            })
+        return data
 
 def home(request):
-    contrato=list(Contratos.objects.all().values())
-    # Crear una lista de listas con los valores de cada contrato
-    contrato_lista = [
-        [
-            infoContrato['Numero_Contrato'],
-            infoContrato['asesor'],
-            infoContrato['cliente_id'],
-            infoContrato['valor'],
-            infoContrato['descripcion'],
-            infoContrato['Fecha_Inicial'].strftime('%Y-%m-%d') if infoContrato['Fecha_Inicial'] else '',
-            infoContrato['Fecha_Final'].strftime('%Y-%m-%d') if infoContrato['Fecha_Final'] else '',
-            infoContrato['archivo_contrato'],
-            ""
-        ]
-        for infoContrato in contrato
-    ]
-    print(contrato_lista)
-    return render(request, "ProyectoCartera/Contratos/Home.html", {"Contratos":contrato_lista})
+
+    return render(request, "ProyectoCartera/Contratos/Home.html")
 
 def clientes(request):
     cliente = list(Clientes.objects.all().values())

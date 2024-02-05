@@ -2,6 +2,7 @@ from django.urls import path, re_path
 from django.conf import settings
 from django.views.static import serve
 from . import views
+from .views import ContratosListJson
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -14,6 +15,7 @@ urlpatterns = [
     path('AgregarClienteVista/', views.agregar_cliente_vista, name='agregar_cliente'),
     path('EliminacionCliente/<cedula>', views.eliminar_cliente),
     path('editarClienteVista/<cedula>', views.editar_cliente_vista, name='editar_cliente'),
+    path('contratos_data/', ContratosListJson.as_view(), name='contratos_data'),
 ]
 
 urlpatterns += [
