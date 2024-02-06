@@ -1,46 +1,19 @@
 {% extends "ProyectoCartera/base.html" %}
+{% load static %}
 
 {% block title %}Clientes{% endblock %}
 
 {% block body %}
-    <div class="row">
-        <div class="col">
-            <h1>Pagos</h1>
-            <div class="table-responsive py-2">
-                <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th># Contrato</th>
-                        <th>Tipo de pago</th>
-                        <th>Valor</th>
-                        <th>Fecha de pago</th>
-                        <th>Archivo</th>
-                        <th>Opcion</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for infoPago in Pagos %}
-                        <tr>
-                            <td>{{infoPago.numero_contrato.Numero_Contrato}}</td>
-                            <td>{{infoPago.get_tipo_pago_display}}</td>
-                            <td>{{infoPago.valor_pago}}</td>
-                            <td>{{infoPago.fecha_pago}}</td>
-                            <td><a href="/./../media/{{ infoPago.archivo_pago }}" target="_blank">{{ infoPago.archivo_pago }}</a></td>
-                            <td><a href="/EditarPagoVista/{{ infoPago.id }}" class="btn btn-info">Editar</a></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            </div>
-
-        </div>
+    <div class="table-responsive m-5">
+         <table id="example" class="display nowrap" ></table>
     </div>
-    <div class="row">
+
+    <div class="row m-5">
         <div class="row"><label class="form-label"> Valor Contrato : {{ datos.0 }}</label></div>
         <div class="row"><label class="form-label"> Valor Pagos :  {{ datos.1 }}</label></div>
         <div class="row"><label class="form-label"> Saldo :  {{ datos.2 }}</label></div>
     </div>
-    <div class="row">
+    <div class="row m-5">
         {% if datos.2 > 0 %}
             <a href="/AgregarPagosVista/{{ contrato }}" class="btn btn-info">Realizar pago</a>
         {% else %}
@@ -57,4 +30,43 @@
             </script>
         {% endfor %}
     {% endif %}
+
+    <script>
+    $(document).ready(function() {
+        $('#example').DataTable({
+            responsive: true,
+            serverSide: true,
+            processing: true,
+            searching: true,
+            ajax: '{% url "pagos_data" %}',
+            language: {
+                "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+            },
+            columns: [
+                { data: 'numero_contrato', title: '# Contrato'},
+                { data: 'tipo_pago', title: 'Tipo pago' },
+                { data: 'valor_pago', title: 'Cliente' },
+                { data: 'valor', title: 'Valor' },
+                { data: 'fecha_pago', title: 'Fecha pago' },
+                { data: 'archivo_pago', title: 'Archivo pago',
+                    render: function (data, type, row, meta){
+                        if(data){
+                            return '<a href="'+data+'" target="_blank"><img src="{% static 'img/filetype-pdf.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
+                        }else{
+                            return data
+                        }
+                    }
+                },
+                { data: null, title: 'Opciones',
+                    render: function (data, type, row, meta) {
+                        return '<button class="btn btn-info" onclick="editarContrato(' + row.numero_Contrato +')">Editar</button> '
+                    }
+                }
+            ]
+        });
+    });
+    function editarContrato(contratoId) {
+        window.location.href = "/EditarPagoVista/" + contratoId.toString()
+    }
+    </script>
 {% endblock %}

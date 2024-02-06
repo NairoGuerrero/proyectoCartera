@@ -11,10 +11,11 @@ import random
 from faker import Faker
 from datetime import datetime, timedelta
 
+
+
 class ContratosListJson(BaseDatatableView):
     model = Contratos
     columns = ['Numero_Contrato', 'asesor', 'cliente_id', 'valor', 'descripcion', 'Fecha_Inicial', 'Fecha_Final', 'archivo_contrato']
-
     def dispatch(self, request, *args, **kwargs):
         try:
             return super(ContratosListJson, self).dispatch(request, *args, **kwargs)
@@ -23,30 +24,24 @@ class ContratosListJson(BaseDatatableView):
     def render_column(self, row, column):
         if column in ['Fecha_Inicial', 'Fecha_Final']:
             return getattr(row, column).strftime('%Y-%m-%d') if getattr(row, column) else ''
-        elif column == 'archivo_contrato':
-             return '<a href="media/' + getattr(row, column) + '" target="_blank"><img src="{% static '' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>'
         else:
             return super(ContratosListJson, self).render_column(row, column)
-
     def filter_queryset(self, qs):
         # Obtén el valor de búsqueda proporcionado por el usuario
         search = self.request.GET.get('search[value]', None)
-
         # Aplica el filtro solo si hay un valor de búsqueda
         if search:
-            # Define las condiciones de búsqueda utilizando Q objects
-            search_conditions = (
-                Q(Numero_Contrato=search) |
-                Q(cliente_id=search)
-
-            )
-
-            # Aplica el filtro a la queryset
-            qs = qs.filter(search_conditions)
-
+            # Verifica si el valor de búsqueda es numérico
+            if search.isdigit():
+                # Aplica el filtro a la queryset utilizando filter directamente
+                qs = qs.filter(
+                    Q(Numero_Contrato__icontains=search) |
+                    Q(cliente__cedula__icontains=search)
+                )
+            else:
+                qs = qs.filter( Q(asesor__icontains=search))
         # Devuelve la queryset filtrada
         return qs
-
     def prepare_results(self, qs):
         data = []
         for item in qs:
@@ -65,25 +60,48 @@ class ContratosListJson(BaseDatatableView):
                 'archivo_contrato': archivo
             })
         return data
-
 def home(request):
-
     return render(request, "ProyectoCartera/Contratos/Home.html")
 
+class ClientesListJson(BaseDatatableView):
+    model = Clientes
+    columns = ['cedula', 'nombre', 'correo', 'ciudad', 'direccion']
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super(ClientesListJson, self).dispatch(request, *args, **kwargs)
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+    def render_column(self, row, column):
+        return super(ClientesListJson, self).render_column(row, column)
+
+    def filter_queryset(self, qs):
+        # Obtén el valor de búsqueda proporcionado por el usuario
+        search = self.request.GET.get('search[value]', None)
+        # Aplica el filtro solo si hay un valor de búsqueda
+        if search:
+            qs = qs.filter(
+                Q(cedula__icontains=search) |
+                Q(nombre__icontains=search) |
+                Q(correo__icontains=search) |
+                Q(ciudad__icontains=search)
+            )
+        # Devuelve la queryset filtrada
+        return qs
+    def prepare_results(self, qs):
+        data = []
+        for item in qs:
+            data.append({
+                'cedula': item.cedula,
+                'nombre': item.nombre,
+                'correo': item.correo,
+                'ciudad': item.ciudad,
+                'direccion': item.direccion
+            })
+        return data
+
 def clientes(request):
-    cliente = list(Clientes.objects.all().values())
-    clientes_vista = [
-        [
-            infocliente['cedula'],
-            infocliente['nombre'],
-            infocliente['correo'],
-            infocliente['ciudad'],
-            infocliente['direccion'],
-            ""
-        ]
-        for infocliente in cliente
-    ]
-    return render(request, "ProyectoCartera/Clientes/Clientes.html", {"Clientes": clientes_vista})
+    return render(request, "ProyectoCartera/Clientes/Clientes.html")
 
 def agregar_contrato_vista(request):
     data = {
@@ -168,12 +186,43 @@ def editar_cliente_vista(request, cedula):
 
     return render(request, "ProyectoCartera/Clientes/EditarCliente.html", data)
 
+class PagosListJson(BaseDatatableView):
+    model = Pagos
+    columns = ['numero_contrato', 'tipo_pago', 'valor_pago', 'fecha_pago', 'archivo_pago']
+
+    # def dispatch(self, request, *args, **kwargs):
+    #     try:
+    #         return super(PagosListJson, self).dispatch(request, *args, **kwargs)
+    #     except Exception as e:
+    #         return JsonResponse({'error': str(e)})
+
+    def render_column(self, row, column):
+        if column in ['fecha_pago']:
+            return getattr(row, column).strftime('%Y-%m-%d') if getattr(row, column) else ''
+        else:
+            return super(PagosListJson, self).render_column(row, column)
+
+    def prepare_results(self, qs):
+        data = []
+        for item in qs:
+            try:
+                archivo = item.archivo_pago.url
+            except:
+                archivo = ''
+            data.append({
+                'numero_contrato': item.numero_contrato,
+                'tipo_pago': item.tipo_pago,
+                'valor_pago': item.valor_pago,
+                'fecha_pago': item.fecha_pago.strftime('%Y-%m-%d') if item.fecha_pago else '',
+                'archivo_pago': archivo
+            })
+        return data
+
 def pagos(request, Numero_Contrato):
-    try:
-        datos = saldo_pagos(Numero_Contrato)
-        return render(request, "ProyectoCartera/Pagos/Pagos.html", {"Pagos":  datos[3], 'datos': datos , 'contrato': Numero_Contrato})
-    except:
-        return render(request, "ProyectoCartera/error.html", {'mensaje': "Este contrato no existe"})
+    datos = saldo_pagos(Numero_Contrato)
+    return render(request, "ProyectoCartera/Pagos/Pagos.html", {'datos': datos , 'contrato': Numero_Contrato})
+    # except:
+    #     return render(request, "ProyectoCartera/error.html", {'mensaje': "Este contrato no existe"})
 
 def agregar_pago_vista(request, Numero_Contrato):
 

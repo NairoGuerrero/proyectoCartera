@@ -13,27 +13,31 @@
         <a href="{% url 'agregar_cliente' %}" class="btn btn-primary"> Agregar Cliente </a>
     </div>
     <script>
-        $('#example').DataTable({
-            fixedHeader: true,
-            responsive: true,
-            language: {
-                "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
-            },
-            columns: [
-                { title: 'Contrato' },
-                { title: 'Asesor' },
-                { title: 'Cliente' },
-                { title: 'Valor.' },
-                { title: 'Descripcion' },
-                {
-                    title: 'Acciones',
-                    render: function (data, type, row, meta) {
-                        return '<button class="btn btn-info" onclick="editarcliente(' + row[0] +')">Editar</button> ' +
-                            ' <button class="btn btn-danger" onclick="eliminarCliente(' + row[0] +')">Eliminar</button>';
+        $(document).ready(function() {
+            $('#example').DataTable({
+                responsive: true,
+                serverSide: true,
+                processing: true,
+                searching: true,
+                ajax: '{% url "clientes_data" %}',
+                language: {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+                },
+                columns: [
+                    {data:'cedula',  title: 'Nit/Cedula' },
+                    {data:'nombre',  title: 'Nombre' },
+                    {data:'correo',  title: 'Correo' },
+                    {data:'ciudad',  title: 'Ciudad.' },
+                    {data:'direccion',  title: 'Direccion' },
+                    {data: null,
+                        title: 'Opciones',
+                        render: function (data, type, row, meta) {
+                            return '<button class="btn btn-info" onclick="editarcliente(' + row.cedula +')">Editar</button> ' +
+                                ' <button class="btn btn-danger" onclick="eliminarCliente(' + row.cedula +')">Eliminar</button>';
+                        }
                     }
-                }
-            ],
-            data: {{ Clientes|safe }}
+                ]
+            });
         });
 
         function editarcliente(contratoId) {
