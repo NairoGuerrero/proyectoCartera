@@ -17,7 +17,7 @@ urlpatterns = [
     path('editar-cliente-vista/<cedula>', views.editar_cliente_vista, name='carteraApp_editar_cliente'),
     path('contratos-data/', ContratosListJson.as_view(), name='carteraApp_contratos_data'),
     path('clientes-data/', ClientesListJson.as_view(), name='carteraApp_clientes_data'),
-    path('pagos-data/', PagosListJson.as_view(), name='carteraApp_pagos_data'),
+    # path('pagos-data/', PagosListJson.as_view(), name='carteraApp_pagos_data'),
 ]
 
 urlpatterns += [

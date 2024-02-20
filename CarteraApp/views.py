@@ -196,44 +196,59 @@ def editar_cliente_vista(request, cedula):
     return render(request, "proyectoCartera/clientes/EditarCliente.html", data)
 
 
-class PagosListJson(BaseDatatableView):
-    model = Pagos
-    columns = ['numero_contrato', 'tipo_pago', 'valor_pago', 'fecha_pago', 'archivo_pago']
-
-    # def dispatch(self, request, *args, **kwargs):
-    #     try:
-    #         return super(PagosListJson, self).dispatch(request, *args, **kwargs)
-    #     except Exception as e:
-    #         return JsonResponse({'error': str(e)})
-
-    def render_column(self, row, column):
-        if column in ['fecha_pago']:
-            return getattr(row, column).strftime('%Y-%m-%d') if getattr(row, column) else ''
-        else:
-            return super(PagosListJson, self).render_column(row, column)
-
-    def prepare_results(self, qs):
-        data = []
-        for item in qs:
-            try:
-                archivo = item.archivo_pago.url
-            except:
-                archivo = ''
-            data.append({
-                'numero_contrato': item.numero_contrato,
-                'tipo_pago': item.tipo_pago,
-                'valor_pago': item.valor_pago,
-                'fecha_pago': item.fecha_pago.strftime('%Y-%m-%d') if item.fecha_pago else '',
-                'archivo_pago': archivo
-            })
-        return data
+# class PagosListJson(BaseDatatableView):
+#     model = Pagos
+#     columns = ['numero_contrato', 'tipo_pago', 'cliente', 'valor_pago', 'fecha_pago', 'archivo_pago']
+#
+#     def dispatch(self, request, *args, **kwargs):
+#         try:
+#             return super(PagosListJson, self).dispatch(request, *args, **kwargs)
+#
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)})
+#
+#     def render_column(self, row, column):
+#         if column in ['fecha_pago']:
+#             return getattr(row, column).strftime('%Y-%m-%d') if getattr(row, column) else ''
+#         else:
+#             return super(PagosListJson, self).render_column(row, column)
+#
+#     def prepare_results(self, qs):
+#         data = []
+#
+#         for item in qs:
+#             try:
+#                 archivo = item.archivo_pago.url
+#             except:
+#                 archivo = ''
+#
+#             data.append({
+#                 'numero_contrato': item.numero_contrato.numero_contrato,
+#                 'tipo_pago': item.tipo_pago,
+#                 'cliente': 'nose',
+#                 'valor_pago': item.valor_pago,
+#                 'fecha_pago': item.fecha_pago.strftime('%Y-%m-%d') if item.fecha_pago else '',
+#                 'archivo_pago': archivo
+#             })
+#         return data
 
 
 def pagos(request, numero_contrato):
     datos = saldo_pagos(numero_contrato)
-    return render(request, "proyectoCartera/pagos/Pagos.html", {'datos': datos, 'contrato': numero_contrato})
-    # except:
-    #     return render(request, "proyectoCartera/error.html", {'mensaje': "Este contrato no existe"})
+    pagos = list(Pagos.objects.filter(numero_contrato__numero_contrato=numero_contrato).values())
+    print(pagos)
+    Pagos_lista = [
+        [   infoPagos['id'],
+            infoPagos['numero_contrato_id'],
+            infoPagos['tipo_pago'],
+            infoPagos['valor_pago'],
+            infoPagos['fecha_pago'].strftime('%Y-%m-%d') if infoPagos['fecha_pago'] else '',
+            infoPagos['archivo_pago'],
+            ""
+        ]
+        for infoPagos in pagos
+    ]
+    return render(request, "proyectoCartera/pagos/Pagos.html", {'datos': datos, 'contrato': numero_contrato, 'datos_pagos': Pagos_lista})
 
 
 def agregar_pago_vista(request, numero_contrato):
