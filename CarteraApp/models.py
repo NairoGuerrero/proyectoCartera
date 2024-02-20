@@ -15,18 +15,18 @@ class Clientes(models.Model):
 
 
 class Contratos(models.Model):
-    Numero_Contrato = models.IntegerField(primary_key=True)
+    numero_contrato = models.IntegerField(primary_key=True)
     asesor = models.CharField(max_length=50)
     cliente = models.ForeignKey(Clientes, on_delete=models.PROTECT)
     valor = models.IntegerField()
-    Fecha_Inicial = models.DateField()
-    Fecha_Final = models.DateField(blank=True, null=True)
-    archivo_contrato = models.FileField(upload_to='Contratos/', blank=True, null=True)
+    fecha_inicial = models.DateField()
+    fecha_final = models.DateField(blank=True, null=True)
+    archivo_contrato = models.FileField(upload_to='contratos/', blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
 
     def __str__(self):
         texto = "{0} - {1}"
-        return texto.format(self.Numero_Contrato, self.asesor)
+        return texto.format(self.numero_contrato, self.asesor)
 
 class Pagos(models.Model):
     tipo_pago_opciones = [

@@ -1,0 +1,73 @@
+{% extends "proyectoCartera/base.html" %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+    {% if messages %}
+        {% for mensaje in messages %}
+            <script>
+                Swal.fire({
+                    "title": "{{ mensaje }}",
+                    "icon": "success"
+                })
+            </script>
+        {% endfor %}
+    {% endif %}
+
+    <div class="table-responsive m-5">
+        <table id="example" class="display nowrap"></table>
+    </div>
+    <div class="row m-5">
+        <a href="{% url 'carteraApp_agregar_contrato' %}" class="btn btn-primary"> Agregar Contrato </a>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#example').DataTable({
+                responsive: true,
+                serverSide: true,
+                processing: true,
+                searching: true,
+                ajax: '{% url "carteraApp_contratos_data" %}',
+                language: {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+                },
+                columns: [
+                    {data: 'numero_contrato', title: '# Contrato'},
+                    {data: 'asesor', title: 'Asesor'},
+                    {data: 'cliente_id', title: 'Cliente'},
+                    {data: 'valor', title: 'Valor'},
+                    {data: 'fecha_inicial', title: 'Fecha Inicial'},
+                    {data: 'fecha_final', title: 'Fecha Final'},
+                    {data: 'descripcion', title: 'Descripcion'},
+                    {
+                        data: 'archivo_contrato', title: 'Archivo Contrato',
+                        render: function (data, type, row, meta) {
+                            if (data) {
+                                return '<a href="' + data + '" target="_blank"><img src="{% static 'img/filetype-pdf.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
+                            } else {
+                                return data
+                            }
+                        }
+                    },
+                    {
+                        data: null, title: 'Opciones',
+                        render: function (data, type, row, meta) {
+                            return '<button class="btn btn-info" onclick="editarContrato(' + row.numero_contrato + ')">Editar</button> ' +
+                                ' <button class="btn btn-success" onclick="vista_pago(' + row.numero_contrato + ')">Pagos</button>';
+                        }
+                    }
+                ]
+            });
+        });
+
+        function editarContrato(contratoId) {
+            window.location.href = '{% url 'carteraApp_editar_contrato' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
+        }
+
+        function vista_pago(contratoId) {
+            window.location.href = '{% url 'carteraApp_pagos' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
+        }
+    </script>
+{% endblock %}

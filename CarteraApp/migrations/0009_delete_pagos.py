@@ -10,6 +10,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.DeleteModel(
-            name="Pagos",
+            name="pagos",
         ),
     ]

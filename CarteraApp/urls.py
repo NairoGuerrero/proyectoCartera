@@ -5,19 +5,19 @@ from . import views
 from .views import *
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('AgregarContratoVista/', views.agregar_contrato_vista, name='agregar_contrato'),
-    path('editarContratoVista/<Numero_Contrato>', views.editar_contrato_vista, name='editar_contrato'),
-    path('Pagos/<Numero_Contrato>', views.pagos),
-    path('AgregarPagosVista/<Numero_Contrato>', views.agregar_pago_vista),
-    path('EditarPagoVista/<id>', views.editar_pago_vista),
-    path('Clientes/', views.clientes, name='clientes'),
-    path('AgregarClienteVista/', views.agregar_cliente_vista, name='agregar_cliente'),
-    path('EliminacionCliente/<cedula>', views.eliminar_cliente),
-    path('editarClienteVista/<cedula>', views.editar_cliente_vista, name='editar_cliente'),
-    path('contratos_data/', ContratosListJson.as_view(), name='contratos_data'),
-    path('clientes_data/', ClientesListJson.as_view(), name='clientes_data'),
-    path('pagos_data/', PagosListJson.as_view(), name='pagos_data'),
+    path('', views.home, name='carteraApp_home'),
+    path('agregar-contrato-vista/', views.agregar_contrato_vista, name='carteraApp_agregar_contrato'),
+    path('editar-contrato-vista/<numero_contrato>', views.editar_contrato_vista, name='carteraApp_editar_contrato'),
+    path('pagos/<numero_contrato>/', views.pagos, name="carteraApp_pagos"),
+    path('agregar-pagos-vista/<numero_contrato>', views.agregar_pago_vista, name="carteraApp_agregar_pago"),
+    path('editar-pago-vista/<id>', views.editar_pago_vista, name = "carteraApp_editar_pago"),
+    path('clientes/', views.clientes, name='carteraApp_clientes'),
+    path('agregar-cliente-vista/', views.agregar_cliente_vista, name='carteraApp_agregar_cliente'),
+    path('elimininar-cliente/<cedula>', views.eliminar_cliente, name="carteraApp_eliminar_cliente"),
+    path('editar-cliente-vista/<cedula>', views.editar_cliente_vista, name='carteraApp_editar_cliente'),
+    path('contratos-data/', ContratosListJson.as_view(), name='carteraApp_contratos_data'),
+    path('clientes-data/', ClientesListJson.as_view(), name='carteraApp_clientes_data'),
+    path('pagos-data/', PagosListJson.as_view(), name='carteraApp_pagos_data'),
 ]
 
 urlpatterns += [

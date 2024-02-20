@@ -10,10 +10,12 @@ class crear_cliente(forms.ModelForm):
             'cedula': 'Nit/Cédula',
         }
 
+
 class actualizar_cliente(forms.ModelForm):
     class Meta:
         model = Clientes
         fields = ['nombre', 'correo', 'ciudad', 'direccion']
+
 
 # modificar asesesor, fecha final
 class CrearContrato(forms.ModelForm):
@@ -21,27 +23,29 @@ class CrearContrato(forms.ModelForm):
         model = Contratos
         fields = '__all__'
         labels = {
-           'Numero_Contrato': '# Contrato',
-           'Fecha_Inicial': 'Fecha inicial',
-           'Fecha_Final': 'Fecha final',
+            'numero_contrato': '# Contrato',
+            'fecha_inicial': 'Fecha inicial',
+            'fecha_final': 'Fecha final',
         }
         widgets = {
-            'Fecha_Inicial': forms.DateInput(attrs={'type': 'date'}),
-            'Fecha_Final': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_inicial': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_final': forms.DateInput(attrs={'type': 'date'}),
         }
+
 
 class ActualizarContrato(forms.ModelForm):
     class Meta:
         model = Contratos
-        fields = ['asesor', 'Fecha_Final', 'descripcion']
+        fields = ['asesor', 'fecha_final', 'descripcion']
         widgets = {
-            'Fecha_Inicial': forms.DateInput(attrs={'type': 'date'}),
-            'Fecha_Final': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_inicial': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_final': forms.DateInput(attrs={'type': 'date'}),
         }
+
 
 class AgregarPago(forms.ModelForm):
     class Meta:
-        model =  Pagos
+        model = Pagos
         fields = '__all__'
         labels = {
             'numero_contrato': '# Contrato',
@@ -51,6 +55,7 @@ class AgregarPago(forms.ModelForm):
             'numero_contrato': forms.HiddenInput(),
 
         }
+
 
 class EditarPago(forms.ModelForm):
     class Meta:

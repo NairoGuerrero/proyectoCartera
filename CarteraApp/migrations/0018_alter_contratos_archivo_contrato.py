@@ -12,6 +12,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="contratos",
             name="archivo_contrato",
-            field=models.FileField(blank=True, null=True, upload_to="Contratos/"),
+            field=models.FileField(blank=True, null=True, upload_to="contratos/"),
         ),
     ]

@@ -1,0 +1,26 @@
+{% extends "proyectoCartera/base.html" %}
+
+{% block title %}Agregar Pago{% endblock %}
+
+{% block body %}
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" class="form-control" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if messages %}
+                    {% for mensaje in messages %}
+                        <div class="alert alert-danger" role="alert">
+                            <h4 class="alert-heading">ERROR!</h4>
+                            <p>{{ mensaje }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {{ formu.as_p }}
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="Contratos",
+            name="contratos",
             fields=[
                 (
                     "Numero_Contrato",

@@ -1,31 +1,29 @@
 from django.shortcuts import render, redirect
-from .models import *
 from .forms import *
 from django.contrib import messages
 from .Funciones import *
-import json
 from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.http import JsonResponse
 from django.db.models import Q
-import random
-from faker import Faker
-from datetime import datetime, timedelta
-
 
 
 class ContratosListJson(BaseDatatableView):
     model = Contratos
-    columns = ['Numero_Contrato', 'asesor', 'cliente_id', 'valor', 'descripcion', 'Fecha_Inicial', 'Fecha_Final', 'archivo_contrato']
+    columns = ['numero_contrato', 'asesor', 'cliente_id', 'valor', 'descripcion', 'fecha_inicial', 'fecha_final',
+               'archivo_contrato']
+
     def dispatch(self, request, *args, **kwargs):
         try:
             return super(ContratosListJson, self).dispatch(request, *args, **kwargs)
         except Exception as e:
             return JsonResponse({'error': str(e)})
+
     def render_column(self, row, column):
-        if column in ['Fecha_Inicial', 'Fecha_Final']:
+        if column in ['fecha_inicial', 'fecha_final']:
             return getattr(row, column).strftime('%Y-%m-%d') if getattr(row, column) else ''
         else:
             return super(ContratosListJson, self).render_column(row, column)
+
     def filter_queryset(self, qs):
         # Obtén el valor de búsqueda proporcionado por el usuario
         search = self.request.GET.get('search[value]', None)
@@ -35,13 +33,14 @@ class ContratosListJson(BaseDatatableView):
             if search.isdigit():
                 # Aplica el filtro a la queryset utilizando filter directamente
                 qs = qs.filter(
-                    Q(Numero_Contrato__icontains=search) |
+                    Q(numero_contrato__icontains=search) |
                     Q(cliente__cedula__icontains=search)
                 )
             else:
-                qs = qs.filter( Q(asesor__icontains=search))
+                qs = qs.filter(Q(asesor__icontains=search))
         # Devuelve la queryset filtrada
         return qs
+
     def prepare_results(self, qs):
         data = []
         for item in qs:
@@ -50,18 +49,21 @@ class ContratosListJson(BaseDatatableView):
             except:
                 archivo = ''
             data.append({
-                'Numero_Contrato': item.Numero_Contrato,
+                'numero_contrato': item.numero_contrato,
                 'asesor': item.asesor,
                 'cliente_id': item.cliente_id,
                 'valor': item.valor,
                 'descripcion': item.descripcion,
-                'Fecha_Inicial': item.Fecha_Inicial.strftime('%Y-%m-%d') if item.Fecha_Inicial else '',
-                'Fecha_Final': item.Fecha_Final.strftime('%Y-%m-%d') if item.Fecha_Final else '',
+                'fecha_inicial': item.fecha_inicial.strftime('%Y-%m-%d') if item.fecha_inicial else '',
+                'fecha_final': item.fecha_final.strftime('%Y-%m-%d') if item.fecha_final else '',
                 'archivo_contrato': archivo
             })
         return data
+
+
 def home(request):
-    return render(request, "ProyectoCartera/Contratos/Home.html")
+    return render(request, "proyectoCartera/contratos/Home.html")
+
 
 class ClientesListJson(BaseDatatableView):
     model = Clientes
@@ -72,6 +74,7 @@ class ClientesListJson(BaseDatatableView):
             return super(ClientesListJson, self).dispatch(request, *args, **kwargs)
         except Exception as e:
             return JsonResponse({'error': str(e)})
+
     def render_column(self, row, column):
         return super(ClientesListJson, self).render_column(row, column)
 
@@ -88,6 +91,7 @@ class ClientesListJson(BaseDatatableView):
             )
         # Devuelve la queryset filtrada
         return qs
+
     def prepare_results(self, qs):
         data = []
         for item in qs:
@@ -100,8 +104,10 @@ class ClientesListJson(BaseDatatableView):
             })
         return data
 
+
 def clientes(request):
-    return render(request, "ProyectoCartera/Clientes/Clientes.html")
+    return render(request, "proyectoCartera/clientes/Clientes.html")
+
 
 def agregar_contrato_vista(request):
     data = {
@@ -112,23 +118,24 @@ def agregar_contrato_vista(request):
         if formulario.is_valid():
             formulario.save()
             messages.success(request, "Contrato agregado exitosamente")
-            return redirect('home')
+            return redirect('carteraApp_home')
         else:
             data["form"] = formulario
 
-    return render(request, "ProyectoCartera/Contratos/CrearContrato.html", data)
+    return render(request, "proyectoCartera/contratos/CrearContrato.html", data)
 
-def editar_contrato_vista(request, Numero_Contrato):
+
+def editar_contrato_vista(request, numero_contrato):
     try:
 
-        contrato = Contratos.objects.get(Numero_Contrato=Numero_Contrato)
+        contrato = Contratos.objects.get(numero_contrato=numero_contrato)
         data = {
-            'Numero_Contrato': Numero_Contrato,
+            'numero_contrato': numero_contrato,
             'cliente': contrato.cliente.cedula,
             'valor': contrato.valor,
             'descripcion': contrato.descripcion,
-            'Fecha_Inicial': contrato.Fecha_Inicial,
-            'archivo_contrato' : contrato.archivo_contrato,
+            'fecha_inicial': contrato.fecha_inicial,
+            'archivo_contrato': contrato.archivo_contrato,
             'form': ActualizarContrato(instance=contrato),
         }
         if request.method == 'POST':
@@ -136,16 +143,16 @@ def editar_contrato_vista(request, Numero_Contrato):
             if formulario.is_valid():
                 formulario.save()
                 messages.success(request, "Se actualizo el contrato coreectamente!")
-                return redirect('home')
+                return redirect('carteraApp_home')
             else:
                 data["form"] = formulario
 
-        return render(request, "ProyectoCartera/Contratos/EditarContrato.html", data)
+        return render(request, "proyectoCartera/contratos/EditarContrato.html", data)
     except:
-        return render(request, "ProyectoCartera/error.html", {'mensaje': "Este contrato "})
+        return render(request, "proyectoCartera/error.html", {'mensaje': "Este contrato "})
+
 
 def agregar_cliente_vista(request):
-
     data = {
         'form': crear_cliente()
     }
@@ -155,10 +162,11 @@ def agregar_cliente_vista(request):
         if formulario.is_valid():
             formulario.save()
             messages.success(request, "Cliente agregado correctamente!")
-            return redirect('clientes')
+            return redirect('carteraApp_clientes')
         else:
             data["form"] = formulario
-    return render(request, "ProyectoCartera/Clientes/CrearCliente.html", data)
+    return render(request, "proyectoCartera/clientes/CrearCliente.html", data)
+
 
 def eliminar_cliente(request, cedula):
     cliente = Clientes.objects.get(cedula=cedula)
@@ -167,7 +175,8 @@ def eliminar_cliente(request, cedula):
         messages.success(request, "Cliente eliminado exitosamente")
     except:
         messages.error(request, "El cliente no se puede eliminar porque tiene contratos registrados.")
-    return redirect('clientes')
+    return redirect('carteraApp_clientes')
+
 
 def editar_cliente_vista(request, cedula):
     cliente = Clientes.objects.get(cedula=cedula)
@@ -180,11 +189,12 @@ def editar_cliente_vista(request, cedula):
         if formulario.is_valid():
             formulario.save()
             messages.success(request, "Cliente actualizado correctamente!")
-            return redirect('clientes')
+            return redirect('carteraApp_clientes')
         else:
             data["form"] = formulario
 
-    return render(request, "ProyectoCartera/Clientes/EditarCliente.html", data)
+    return render(request, "proyectoCartera/clientes/EditarCliente.html", data)
+
 
 class PagosListJson(BaseDatatableView):
     model = Pagos
@@ -218,18 +228,19 @@ class PagosListJson(BaseDatatableView):
             })
         return data
 
-def pagos(request, Numero_Contrato):
-    datos = saldo_pagos(Numero_Contrato)
-    return render(request, "ProyectoCartera/Pagos/Pagos.html", {'datos': datos , 'contrato': Numero_Contrato})
+
+def pagos(request, numero_contrato):
+    datos = saldo_pagos(numero_contrato)
+    return render(request, "proyectoCartera/pagos/Pagos.html", {'datos': datos, 'contrato': numero_contrato})
     # except:
-    #     return render(request, "ProyectoCartera/error.html", {'mensaje': "Este contrato no existe"})
+    #     return render(request, "proyectoCartera/error.html", {'mensaje': "Este contrato no existe"})
 
-def agregar_pago_vista(request, Numero_Contrato):
 
+def agregar_pago_vista(request, numero_contrato):
     data = {
-        'formu': AgregarPago(initial={'numero_contrato': Numero_Contrato})
+        'formu': AgregarPago(initial={'numero_contrato': numero_contrato})
     }
-    datos = saldo_pagos(Numero_Contrato)
+    datos = saldo_pagos(numero_contrato)
     if request.method == 'POST':
         formulario = AgregarPago(data=request.POST, files=request.FILES)
         if formulario.is_valid():
@@ -238,22 +249,24 @@ def agregar_pago_vista(request, Numero_Contrato):
 
             if valor_pago > valor_contrato or valor_pago > datos[2]:
                 messages.error(request, "El valor de pago supera el valor del saldo")
-                return render(request, "ProyectoCartera/Pagos/CrearPago.html", data)
+                return render(request, "proyectoCartera/pagos/CrearPago.html", data)
             else:
                 formulario.save()
                 messages.success(request, "Pago agregado correctamente!")
-                return redirect('/Pagos/' + str(Numero_Contrato))
+                return redirect('carteraApp_pagos', str(numero_contrato))
+                # return redirect('/pagos/' + str(numero_contrato))
         else:
             data["form"] = formulario
-    return render(request, "ProyectoCartera/Pagos/CrearPago.html", data)
+    return render(request, "proyectoCartera/pagos/CrearPago.html", data)
+
 
 def editar_pago_vista(request, id):
-    pago = Pagos.objects.get(id = id)
+    pago = Pagos.objects.get(id=id)
     data = {
-        'numero_contrato' : pago.numero_contrato.Numero_Contrato,
-        'tipo_pago' : pago.get_tipo_pago_display(),
-        'valor_pago' : pago.valor_pago,
-        'fecha_pago' : pago.fecha_pago,
+        'numero_contrato': pago.numero_contrato.numero_contrato,
+        'tipo_pago': pago.get_tipo_pago_display(),
+        'valor_pago': pago.valor_pago,
+        'fecha_pago': pago.fecha_pago,
         'form': EditarPago(instance=pago),
     }
     if request.method == 'POST':
@@ -261,8 +274,9 @@ def editar_pago_vista(request, id):
         if formulario.is_valid():
             formulario.save()
             messages.success(request, "Actualizado el pago correctamente!")
-            return redirect('/Pagos/' + str(pago.numero_contrato.Numero_Contrato))
+            return redirect('carteraApp_pagos', str(pago.numero_contrato.numero_contrato))
+            # return redirect('/pagos/' + str(pago.numero_contrato.numero_contrato))
         else:
             data["form"] = formulario
 
-    return render(request, "ProyectoCartera/Pagos/EditarPago.html", data)
+    return render(request, "proyectoCartera/pagos/EditarPago.html", data)

@@ -1,0 +1,94 @@
+{% extends "proyectoCartera/base.html" %}
+
+
+
+{% block title %}Clientes{% endblock %}
+
+{% block body %}
+
+    <div class="table-responsive m-5">
+        <table id="example" class="display nowrap" width="100%"></table>
+    </div>
+    <div class="row m-5">
+        <a href="{% url 'carteraApp_agregar_cliente' %}" class="btn btn-primary"> Agregar Cliente </a>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $('#example').DataTable({
+                responsive: true,
+                serverSide: true,
+                processing: true,
+                searching: true,
+                ajax: '{% url "carteraApp_clientes_data" %}',
+                language: {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+                },
+                columns: [
+                    {data: 'cedula', title: 'Nit/Cedula'},
+                    {data: 'nombre', title: 'Nombre'},
+                    {data: 'correo', title: 'Correo'},
+                    {data: 'ciudad', title: 'Ciudad.'},
+                    {data: 'direccion', title: 'Direccion'},
+                    {
+                        data: null,
+                        title: 'Opciones',
+                        render: function (data, type, row, meta) {
+                            return '<button class="btn btn-info" onclick="editarcliente(' + row.cedula + ')">Editar</button> ' +
+                                ' <button class="btn btn-danger" onclick="eliminarCliente(' + row.cedula + ')">Eliminar</button>';
+                        }
+                    }
+                ]
+            });
+        });
+
+        function editarcliente(contratoId) {
+            window.location.href = '{% url 'carteraApp_editar_cliente' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
+        }
+    </script>
+
+
+    {% if messages %}
+        {% for mensaje in messages %}
+            {% if mensaje.tags == 'success' %}
+                <script>
+                    Swal.fire({
+                        title: "{{ mensaje }}",
+                        icon: "success"
+                    });
+                </script>
+
+            {% elif mensaje.tags == 'danger' %}
+                <script>
+                    Swal.fire({
+                        title: "ERROR!",
+                        text: "{{ mensaje }}",
+                        icon: "error"
+                    });
+                </script>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% block js %}
+        <script>
+            function eliminarCliente(id) {
+                Swal.fire({
+                    title: "¿Esta seguro que quiere eliminar el cliente?",
+                    text: "Esta accion no es reversible!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Eliminar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '{% url 'carteraApp_eliminar_cliente' 'numero_contrato' %}'.replace('numero_contrato', id)
+                    }
+                });
+            }
+        </script>
+    {% endblock %}
+{% endblock %}
+
+
+
