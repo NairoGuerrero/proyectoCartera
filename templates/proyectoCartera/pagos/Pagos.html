@@ -16,7 +16,7 @@
     <div class="row m-5">
         {% if datos.2 > 0 %}
             {#            <a href="/AgregarPagosVista/{{ contrato }}" class="btn btn-info">Realizar pago</a>#}
-            <a href='{% url 'carteraApp_editar_contrato' contrato %}' class="btn btn-info">Realizar pago</a>
+            <a href='{% url 'carteraApp_agregar_pago' contrato %}' class="btn btn-info">Realizar pago</a>
         {% else %}
             <button class="btn btn-info" disabled>Realizar pago</button>
         {% endif %}
@@ -32,45 +32,40 @@
         {% endfor %}
     {% endif %}
 
-    <script>
-        $(document).ready(function () {
-            $('#example').DataTable({
-                responsive: true,
-                serverSide: true,
-                processing: true,
-                searching: true,
-                ajax: '{% url "carteraApp_pagos_data" %}',
-                language: {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
-                },
-                columns: [
-                    {data: 'numero_contrato', title: '# Contrato'},
-                    {data: 'tipo_pago', title: 'Tipo pago'},
-                    {data: 'valor_pago', title: 'Cliente'},
-                    {data: 'valor', title: 'Valor'},
-                    {data: 'fecha_pago', title: 'Fecha pago'},
-                    {
-                        data: 'archivo_pago', title: 'Archivo pago',
-                        render: function (data, type, row, meta) {
-                            if (data) {
-                                return '<a href="' + data + '" target="_blank"><img src="{% static 'img/filetype-pdf.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
-                            } else {
-                                return data
-                            }
+        <script>
+        $('#example').DataTable({
+            responsive: true,
+            language: {
+                "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+            },
+            columns: [
+                {title: 'id', visible:false},
+                { title: 'Contrato' },
+                { title: 'Tipo Pago' },
+                { title: 'Valor.' },
+                { title: 'Fecha Pago' },
+                {
+                    title: 'Archivo',
+                    render: function (data, type, row, meta){
+                        if (row[5]){
+                            return '<a href="/media/' + row[5] + '" target="_blank"><img src="{% static 'img/filetype-pdf.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
                         }
-                    },
-                    {
-                        data: null, title: 'Opciones',
-                        render: function (data, type, row, meta) {
-                            return '<button class="btn btn-info" onclick="editarContrato(' + row.numero_Contrato + ')">Editar</button> '
+                        else{
+                            return ''
                         }
                     }
-                ]
-            });
+                },
+                {
+                    title: 'Acciones',
+                    render: function (data, type, row, meta) {
+                        return '<button class="btn btn-info" onclick="editarPago(' + row[0] +')">Editar</button> '
+                    }
+                }
+            ],
+            data: {{ datos_pagos|safe }}
         });
-
-        function editarContrato(contratoId) {
-            window.location.href = '{% url 'carteraApp_editar_pago' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
+        function editarPago(contratoId) {
+           window.location.href = '{% url 'carteraApp_editar_pago' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
         }
     </script>
 {% endblock %}
