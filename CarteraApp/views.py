@@ -5,6 +5,7 @@ from .Funciones import *
 from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.http import JsonResponse
 from django.db.models import Q
+import locale
 
 
 class ContratosListJson(BaseDatatableView):
@@ -42,8 +43,10 @@ class ContratosListJson(BaseDatatableView):
         return qs
 
     def prepare_results(self, qs):
+        locale.setlocale(locale.LC_ALL, '')
         data = []
         for item in qs:
+
             try:
                 archivo = item.archivo_contrato.url
             except:
@@ -52,12 +55,14 @@ class ContratosListJson(BaseDatatableView):
                 'numero_contrato': item.numero_contrato,
                 'asesor': item.asesor,
                 'cliente_id': item.cliente_id,
-                'valor': item.valor,
+                'valor': locale.format_string("%.0f", item.valor, grouping=True),
+                'saldo': locale.format_string("%.0f", saldo_pagos(item.numero_contrato)[2], grouping=True),
                 'descripcion': item.descripcion,
                 'fecha_inicial': item.fecha_inicial.strftime('%Y-%m-%d') if item.fecha_inicial else '',
                 'fecha_final': item.fecha_final.strftime('%Y-%m-%d') if item.fecha_final else '',
                 'archivo_contrato': archivo
             })
+
         return data
 
 
@@ -234,21 +239,29 @@ def editar_cliente_vista(request, cedula):
 
 
 def pagos(request, numero_contrato):
+    # Configurar locale para formatear el número con separadores de miles
+    locale.setlocale(locale.LC_ALL, '')
+
     datos = saldo_pagos(numero_contrato)
     pagos = list(Pagos.objects.filter(numero_contrato__numero_contrato=numero_contrato).values())
     print(pagos)
     Pagos_lista = [
-        [   infoPagos['id'],
-            infoPagos['numero_contrato_id'],
-            infoPagos['tipo_pago'],
-            infoPagos['valor_pago'],
-            infoPagos['fecha_pago'].strftime('%Y-%m-%d') if infoPagos['fecha_pago'] else '',
-            infoPagos['archivo_pago'],
-            ""
-        ]
+        [infoPagos['id'],
+         infoPagos['numero_contrato_id'],
+         infoPagos['tipo_pago'],
+         locale.format_string("%.0f", infoPagos['valor_pago'], grouping=True),  # Formatear el valor_pago
+         infoPagos['fecha_pago'].strftime('%Y-%m-%d') if infoPagos['fecha_pago'] else '',
+         infoPagos['archivo_pago'],
+         ""
+         ]
         for infoPagos in pagos
     ]
-    return render(request, "proyectoCartera/pagos/Pagos.html", {'datos': datos, 'contrato': numero_contrato, 'datos_pagos': Pagos_lista})
+    # Reemplazar el valor de 'tipo_pago' con el texto descriptivo
+    for infoPagos in Pagos_lista:
+        infoPagos[2] = dict(Pagos.tipo_pago_opciones)[infoPagos[2]]
+
+    return render(request, "proyectoCartera/pagos/Pagos.html",
+                  {'datos': datos, 'contrato': numero_contrato, 'datos_pagos': Pagos_lista})
 
 
 def agregar_pago_vista(request, numero_contrato):

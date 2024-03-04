@@ -32,25 +32,28 @@
         {% endfor %}
     {% endif %}
 
-        <script>
+    <script>
         $('#example').DataTable({
             responsive: true,
             language: {
                 "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
             },
             columns: [
-                {title: 'id', visible:false},
-                { title: 'Contrato' },
-                { title: 'Tipo Pago' },
-                { title: 'Valor.' },
-                { title: 'Fecha Pago' },
+                {title: 'id', visible: false},
+                {title: 'Contrato'},
+                {
+                    title: 'Tipo Pago', render: function (data, type, row, meta) {
+                        return row[2]; // Mantener el valor original
+                    }
+                },
+                {title: 'Valor.'},
+                {title: 'Fecha Pago'},
                 {
                     title: 'Archivo',
-                    render: function (data, type, row, meta){
-                        if (row[5]){
-                            return '<a href="/media/' + row[5] + '" target="_blank"><img src="{% static 'img/filetype-pdf.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
-                        }
-                        else{
+                    render: function (data, type, row, meta) {
+                        if (row[5]) {
+                            return '<a href="/media/' + row[5] + '" target="_blank"><img src="{% static 'img/file-earmark-minus.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
+                        } else {
                             return ''
                         }
                     }
@@ -58,14 +61,15 @@
                 {
                     title: 'Acciones',
                     render: function (data, type, row, meta) {
-                        return '<button class="btn btn-info" onclick="editarPago(' + row[0] +')">Editar</button> '
+                        return '<button class="btn btn-info" onclick="editarPago(' + row[0] + ')">Editar</button> '
                     }
                 }
             ],
             data: {{ datos_pagos|safe }}
         });
+
         function editarPago(contratoId) {
-           window.location.href = '{% url 'carteraApp_editar_pago' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
+            window.location.href = '{% url 'carteraApp_editar_pago' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
         }
     </script>
 {% endblock %}

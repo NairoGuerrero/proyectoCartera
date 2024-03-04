@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 # Create your models here.
@@ -21,7 +22,7 @@ class Contratos(models.Model):
     cliente = models.ForeignKey(Clientes, on_delete=models.PROTECT)
     valor = models.IntegerField()
     fecha_inicial = models.DateField()
-    fecha_final = models.DateField(blank=True, null=True)
+    fecha_final = models.DateField()
     archivo_contrato = models.FileField(upload_to='contratos/', blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
 
@@ -32,11 +33,12 @@ class Contratos(models.Model):
 
 class Pagos(models.Model):
     tipo_pago_opciones = [
-        ('recibo_de_caja', 'Recibo de Caja'),
-        ('factura', 'Factura'),
+        ('recibo_de_caja_efectivo', 'Recibo de caja - Efectivo'),
+        ('recibo_de_caja_banco', 'Recibo de caja -  Banco'),
+        ('abono', ' Abono')
     ]
     numero_contrato = models.ForeignKey(Contratos, on_delete=models.PROTECT)
-    tipo_pago = models.CharField(max_length=20, choices=tipo_pago_opciones)
+    tipo_pago = models.CharField(max_length=50, choices=tipo_pago_opciones)
     valor_pago = models.IntegerField()
     fecha_pago = models.DateField()
-    archivo_pago = models.FileField(upload_to='Recibos/', blank=True, null=True)
+    archivo_pago = models.FileField(upload_to='Recibos/')
