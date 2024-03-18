@@ -1,26 +1,38 @@
 {% extends "proyectoCartera/base.html" %}
-
+{% load crispy_forms_filters %}
 {% block title %}Agregar Pago{% endblock %}
 
 {% block body %}
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" class="form-control" enctype="multipart/form-data">
-                {% csrf_token %}
-                {% if messages %}
-                    {% for mensaje in messages %}
-                        <div class="alert alert-danger" role="alert">
-                            <h4 class="alert-heading">ERROR!</h4>
-                            <p>{{ mensaje }}</p>
+    {% load crispy_forms_tags %}
+    }
+    <div class="container-sm container-lg py-3">
+        <div class="card">
+            <div class="card-header fw-bold text-center " style="background-color: white;">
+                Datos Pago
+            </div>
+
+            <div class="card-body">
+                <form method="POST" class="form-control" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if messages %}
+                        {% for mensaje in messages %}
+                            <div class="alert alert-danger" role="alert">
+                                <h4 class="alert-heading">ERROR!</h4>
+                                <p>{{ mensaje }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="row fw-bold fs-7 text-capitalize">{{ formu | crispy }}</div>
+                    <div class="form-group">
+                        <div class="row m-3">
+                            <button type="submit" class="btn btn-primary">Actualizar</button>
                         </div>
-                    {% endfor %}
-                {% endif %}
-                {{ formu.as_p }}
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
+                    </div>
+                </form>
+            </div>
+
         </div>
+
     </div>
 
 {% endblock %}

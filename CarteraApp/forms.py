@@ -14,7 +14,10 @@ class crear_cliente(forms.ModelForm):
 class actualizar_cliente(forms.ModelForm):
     class Meta:
         model = Clientes
-        fields = ['nombre', 'correo', 'ciudad', 'direccion']
+        fields = '__all__'
+        widgets = {
+            'cedula': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
+        }
 
 
 # modificar asesesor, fecha final
@@ -36,10 +39,14 @@ class CrearContrato(forms.ModelForm):
 class ActualizarContrato(forms.ModelForm):
     class Meta:
         model = Contratos
-        fields = ['asesor', 'fecha_final', 'descripcion']
+        fields = '__all__'
         widgets = {
-            'fecha_inicial': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_inicial': forms.DateInput(attrs={'type': 'date','readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
             'fecha_final': forms.DateInput(attrs={'type': 'date'}),
+            'numero_contrato': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
+            'cliente': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
+            'valor': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
+            'fecha_inicial': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'})
         }
 
 
@@ -60,7 +67,10 @@ class AgregarPago(forms.ModelForm):
 class EditarPago(forms.ModelForm):
     class Meta:
         model = Pagos
-        fields = ['archivo_pago']
+        fields = '__all__'
         widgets = {
-            'fecha_pago': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_pago': forms.DateInput(attrs={'type': 'date','readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
+            'numero_contrato': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
+            'tipo_pago': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
+            'valor_pago': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
         }

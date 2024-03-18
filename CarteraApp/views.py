@@ -135,12 +135,6 @@ def editar_contrato_vista(request, numero_contrato):
 
         contrato = Contratos.objects.get(numero_contrato=numero_contrato)
         data = {
-            'numero_contrato': numero_contrato,
-            'cliente': contrato.cliente.cedula,
-            'valor': contrato.valor,
-            'descripcion': contrato.descripcion,
-            'fecha_inicial': contrato.fecha_inicial,
-            'archivo_contrato': contrato.archivo_contrato,
             'form': ActualizarContrato(instance=contrato),
         }
         if request.method == 'POST':
@@ -186,7 +180,6 @@ def eliminar_cliente(request, cedula):
 def editar_cliente_vista(request, cedula):
     cliente = Clientes.objects.get(cedula=cedula)
     data = {
-        'cedula': cedula,
         'form': actualizar_cliente(instance=cliente)
     }
     if request.method == 'POST':
@@ -291,10 +284,6 @@ def agregar_pago_vista(request, numero_contrato):
 def editar_pago_vista(request, id):
     pago = Pagos.objects.get(id=id)
     data = {
-        'numero_contrato': pago.numero_contrato.numero_contrato,
-        'tipo_pago': pago.get_tipo_pago_display(),
-        'valor_pago': pago.valor_pago,
-        'fecha_pago': pago.fecha_pago,
         'form': EditarPago(instance=pago),
     }
     if request.method == 'POST':

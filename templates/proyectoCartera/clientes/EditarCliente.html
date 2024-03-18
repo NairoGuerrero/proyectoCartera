@@ -1,19 +1,30 @@
 {% extends "proyectoCartera/base.html" %}
+{% load crispy_forms_filters %}
 
 {% block title %}Editar Cliente{% endblock %}
 
 {% block body %}
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" class="form-control">
-                {% csrf_token %}
-                <label class="form-label">Nit/Cedula: {{ cedula }}</label>
-                {{ form.as_p }}
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Actualizar</button>
-                </div>
-            </form>
+    {% load crispy_forms_tags %}
+    <div class="container-sm container-lg py-3">
+        <div class="card">
+                    <div class="card-header fw-bold text-center " style="background-color: white;">
+                        Datos Cliente
+                    </div>
+
+                    <div class="card-body">
+                        <form method="POST" class="form-control" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row fw-bold fs-7 text-capitalize">{{ form | crispy }}</div>
+                            <div class="form-group">
+                                <div class="row m-3">
+                                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
         </div>
+
     </div>
 
 {% endblock %}

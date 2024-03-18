@@ -10,7 +10,7 @@ urlpatterns = [
     path('editar-contrato-vista/<numero_contrato>', views.editar_contrato_vista, name='carteraApp_editar_contrato'),
     path('pagos/<numero_contrato>/', views.pagos, name="carteraApp_pagos"),
     path('agregar-pagos-vista/<numero_contrato>', views.agregar_pago_vista, name="carteraApp_agregar_pago"),
-    path('editar-pago-vista/<id>', views.editar_pago_vista, name = "carteraApp_editar_pago"),
+    path('editar-pago-vista/<id>', views.editar_pago_vista, name="carteraApp_editar_pago"),
     path('clientes/', views.clientes, name='carteraApp_clientes'),
     path('agregar-cliente-vista/', views.agregar_cliente_vista, name='carteraApp_agregar_cliente'),
     path('elimininar-cliente/<cedula>', views.eliminar_cliente, name="carteraApp_eliminar_cliente"),
@@ -21,7 +21,7 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', serve,{
+    re_path(r'^media/(?P<path>.*)$', serve, {
         'document_root': settings.MEDIA_ROOT,
     })
 ]
