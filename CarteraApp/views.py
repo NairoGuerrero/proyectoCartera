@@ -6,12 +6,15 @@ from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.http import JsonResponse
 from django.db.models import Q
 import locale
+import datetime
+from django.utils.translation import gettext as _
+
 
 
 class ContratosListJson(BaseDatatableView):
     model = Contratos
-    columns = ['numero_contrato', 'asesor', 'cliente_id', 'valor', 'descripcion', 'fecha_inicial', 'fecha_final',
-               'archivo_contrato']
+
+
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -43,27 +46,33 @@ class ContratosListJson(BaseDatatableView):
         return qs
 
     def prepare_results(self, qs):
-        locale.setlocale(locale.LC_ALL, '')
-        data = []
+        locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+        prueba = []
+        today = datetime.date.today()
+
         for item in qs:
 
             try:
                 archivo = item.archivo_contrato.url
             except:
                 archivo = ''
-            data.append({
+
+            dias_restantes = (item.fecha_final - today).days if item.fecha_final else None
+            dias_restantes_texto = f"{dias_restantes} días" if dias_restantes is not None else None
+            prueba.append({
                 'numero_contrato': item.numero_contrato,
                 'asesor': item.asesor,
-                'cliente_id': item.cliente_id,
+                'cliente_id': item.cliente.nombre,
                 'valor': locale.format_string("%.0f", item.valor, grouping=True),
                 'saldo': locale.format_string("%.0f", saldo_pagos(item.numero_contrato)[2], grouping=True),
-                'descripcion': item.descripcion,
-                'fecha_inicial': item.fecha_inicial.strftime('%Y-%m-%d') if item.fecha_inicial else '',
-                'fecha_final': item.fecha_final.strftime('%Y-%m-%d') if item.fecha_final else '',
+                'dias_restantes': dias_restantes_texto,
+                'fecha_inicial': item.fecha_inicial.strftime(
+                    '%d de %B del %Y') if item.fecha_inicial else item.fecha_inicial,
+                'fecha_final': item.fecha_final.strftime('%d de %B del %Y') if item.fecha_final else item.fecha_final,
                 'archivo_contrato': archivo
             })
-
-        return data
+        print('obserevar : ', prueba)
+        return prueba
 
 
 def home(request):
@@ -236,11 +245,11 @@ def pagos(request, numero_contrato):
     locale.setlocale(locale.LC_ALL, '')
 
     datos = saldo_pagos(numero_contrato)
-    pagos = list(Pagos.objects.filter(numero_contrato__numero_contrato=numero_contrato).values())
-    print(pagos)
+    pagos = list(Pagos.objects.filter(contrato__numero_contrato=numero_contrato).values())
+
     Pagos_lista = [
         [infoPagos['id'],
-         infoPagos['numero_contrato_id'],
+         infoPagos['contrato_id'],
          infoPagos['tipo_pago'],
          locale.format_string("%.0f", infoPagos['valor_pago'], grouping=True),  # Formatear el valor_pago
          infoPagos['fecha_pago'].strftime('%Y-%m-%d') if infoPagos['fecha_pago'] else '',
@@ -259,14 +268,14 @@ def pagos(request, numero_contrato):
 
 def agregar_pago_vista(request, numero_contrato):
     data = {
-        'formu': AgregarPago(initial={'numero_contrato': numero_contrato})
+        'formu': AgregarPago(initial={'contrato': numero_contrato})
     }
     datos = saldo_pagos(numero_contrato)
     if request.method == 'POST':
         formulario = AgregarPago(data=request.POST, files=request.FILES)
         if formulario.is_valid():
             valor_pago = formulario.cleaned_data['valor_pago']
-            valor_contrato = datos[0]
+            valor_contrato = datos[4]
 
             if valor_pago > valor_contrato or valor_pago > datos[2]:
                 messages.error(request, "El valor de pago supera el valor del saldo")
@@ -274,7 +283,7 @@ def agregar_pago_vista(request, numero_contrato):
             else:
                 formulario.save()
                 messages.success(request, "Pago agregado correctamente!")
-                return redirect('carteraApp_pagos', str(numero_contrato))
+                return redirect('carteraApp_ver_contrato', str(numero_contrato))
                 # return redirect('/pagos/' + str(numero_contrato))
         else:
             data["form"] = formulario
@@ -291,9 +300,223 @@ def editar_pago_vista(request, id):
         if formulario.is_valid():
             formulario.save()
             messages.success(request, "Actualizado el pago correctamente!")
-            return redirect('carteraApp_pagos', str(pago.numero_contrato.numero_contrato))
+            return redirect('carteraApp_ver_contrato', str(pago.contrato.numero_contrato))
             # return redirect('/pagos/' + str(pago.numero_contrato.numero_contrato))
         else:
             data["form"] = formulario
 
     return render(request, "proyectoCartera/pagos/EditarPago.html", data)
+
+
+class PagosListJson(BaseDatatableView):
+    model = Pagos
+
+    # columns = ['numero_contrato', 'asesor', 'cliente_id', 'valor', 'descripcion', 'fecha_inicial', 'fecha_final',
+    #            'archivo_contrato']
+
+    def __init__(self):
+        super().__init__()
+        self.parametros = {}
+
+    def get_initial_queryset(self):
+        if not self.model:
+            raise NotImplementedError(
+                "Need to provide a model or implement get_initial_queryset!"
+            )
+        return self.model.objects.filter(contrato=self.parametros.get('numero_contrato'))
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.parametros = kwargs
+            print('pagos :', kwargs)
+            return super(PagosListJson, self).dispatch(request, *args, **kwargs)
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+
+    def render_column(self, row, column):
+
+        return super(PagosListJson, self).render_column(row, column)
+
+    def filter_queryset(self, qs):
+        # Obtén el valor de búsqueda proporcionado por el usuario
+        search = self.request.GET.get('search[value]', None)
+        # Aplica el filtro solo si hay un valor de búsqueda
+        if search:
+            # Verifica si el valor de búsqueda es numérico
+            if search.isdigit():
+                # Aplica el filtro a la queryset utilizando filter directamente
+                qs = qs.filter(
+                    Q(numero_contrato__icontains=search) |
+                    Q(cliente__cedula__icontains=search)
+                )
+            else:
+                qs = qs.filter(Q(asesor__icontains=search))
+        # Devuelve la queryset filtrada
+        return qs
+
+    def prepare_results(self, qs):
+        locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+        data = []
+        today = datetime.date.today()
+
+        for item in qs:
+            data.append({
+                'id': item.id,
+                'contrato': item.contrato.numero_contrato,
+                'tipo_pago': item.get_tipo_pago_display(),
+                'valor_pago': locale.format_string("%.0f", item.valor_pago, grouping=True),
+                'fecha_pago': item.fecha_pago.strftime('%d de %B del %Y') if item.fecha_pago else item.fecha_pago,
+                'archivo_pago': item.archivo_pago.url
+
+            })
+
+        return data
+
+
+class SubContratosListJson(BaseDatatableView):
+    model = AdicionContrato
+
+    # columns = ['numero_contrato', 'asesor', 'cliente_id', 'valor', 'descripcion', 'fecha_inicial', 'fecha_final',
+    #            'archivo_contrato']
+
+    def __init__(self):
+        super().__init__()
+        self.parametros = {}
+
+    def get_initial_queryset(self):
+        if not self.model:
+            raise NotImplementedError(
+                "Need to provide a model or implement get_initial_queryset!"
+            )
+        return self.model.objects.filter(contrato=self.parametros.get('numero_contrato'))
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.parametros = kwargs
+
+            return super(SubContratosListJson, self).dispatch(request, *args, **kwargs)
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+
+    def render_column(self, row, column):
+
+        return super(SubContratosListJson, self).render_column(row, column)
+
+    def filter_queryset(self, qs):
+        # Obtén el valor de búsqueda proporcionado por el usuario
+        search = self.request.GET.get('search[value]', None)
+        # Aplica el filtro solo si hay un valor de búsqueda
+        if search:
+            # Verifica si el valor de búsqueda es numérico
+            if search.isdigit():
+                # Aplica el filtro a la queryset utilizando filter directamente
+                qs = qs.filter(
+                    Q(numero_contrato__icontains=search) |
+                    Q(cliente__cedula__icontains=search)
+                )
+            else:
+                qs = qs.filter(Q(asesor__icontains=search))
+        # Devuelve la queryset filtrada
+        return qs
+
+    def prepare_results(self, qs):
+        locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+        data = []
+        today = datetime.date.today()
+
+        for item in qs:
+            data.append({
+                'id': item.id,
+                'contrato': item.contrato.numero_contrato,
+                'nuevo_valor': locale.format_string("%.0f", item.nuevo_valor,
+                                                    grouping=True) if item.nuevo_valor else 'No especificado',
+                'nueva_fecha': item.nueva_fecha.strftime('%d de %B del %Y') if item.nueva_fecha else 'No especificado',
+                'archivo_nuevo': item.archivo_nuevo.url
+
+            })
+
+        return data
+
+
+def agregar_subcontrato(request, numero_contrato):
+    contrato = Contratos.objects.get(numero_contrato=numero_contrato)
+
+    if contrato.fecha_final < datetime.date.today():
+        inicio_fecha = datetime.date.today()
+    else:
+        inicio_fecha = contrato.fecha_final
+    data = {
+        'formu': AgregarSubContrato(initial={'contrato': numero_contrato}, fecha_minima=inicio_fecha)
+    }
+
+    if request.method == 'POST':
+        formulario = AgregarSubContrato(data=request.POST, files=request.FILES)
+        if formulario.is_valid():
+
+            formulario.save()
+            ultimo_subcontrato = AdicionContrato.objects.filter(contrato__numero_contrato=numero_contrato).last()
+            print('mirar:', ultimo_subcontrato.nueva_fecha)
+
+            if ultimo_subcontrato.nueva_fecha:
+                contrato.fecha_final = ultimo_subcontrato.nueva_fecha
+                contrato.save()
+            if ultimo_subcontrato.nuevo_valor:
+                contrato.valor_subcontratos = ultimo_subcontrato.nuevo_valor + contrato.valor_subcontratos
+                contrato.save()
+            messages.success(request, "Sub-contrato agregado correctamente!")
+            return redirect('carteraApp_ver_contrato', str(numero_contrato))
+            # return redirect('/pagos/' + str(numero_contrato))
+        else:
+            data["formu"] = formulario
+    return render(request, "proyectoCartera/contratos/agregar-subcontrato.html", data)
+
+
+def ver_contrato(request, numero_contrato):
+    locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+    try:
+
+        contrato = Contratos.objects.get(numero_contrato=numero_contrato)
+        contrato.valor = str(locale.format_string("%.0f", contrato.valor, grouping=True))
+        contrato.valor_subcontratos = str(locale.format_string("%.0f", contrato.valor_subcontratos, grouping=True))
+        contrato.fecha_inicial = contrato.fecha_inicial.strftime(
+            '%d de %B del %Y') if contrato.fecha_inicial else contrato.fecha_inicial
+        contrato.fecha_final = contrato.fecha_final.strftime(
+            '%d de %B del %Y') if contrato.fecha_final else contrato.fecha_final
+
+        info_pagos = saldo_pagos(numero_contrato)
+        info_pagos[1] = str(locale.format_string("%.0f", info_pagos[1], grouping=True))
+        info_pagos[2] = str(locale.format_string("%.0f", info_pagos[2], grouping=True))
+        info_pagos[4] = str(locale.format_string("%.0f", info_pagos[4], grouping=True))
+
+        context = {
+            'informacion_contrato': contrato,
+            'informacion_pagos': info_pagos,
+        }
+
+        return render(request, "proyectoCartera/contratos/ver-contrato.html", context)
+    except:
+        return render(request, "proyectoCartera/contratos/error.html", )
+
+
+def filtro_contratos(request):
+
+    claves_contratos = ['cliente__nombre', 'asesor']
+    dato_cliente = set()
+    dato_asesor = set()
+
+
+    for k in claves_contratos:
+        contratos = Contratos.objects.all().values_list(k, flat=True)
+        for item in contratos:
+            if k == 'cliente__nombre':
+                dato_cliente.add(item)
+            elif k == 'asesor':
+                dato_asesor.add(item)
+
+
+    data = {
+        'Cliente': list(dato_cliente),
+        'Asesor': list(dato_asesor)
+
+    }
+    return JsonResponse(data)

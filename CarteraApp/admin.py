@@ -6,3 +6,4 @@ from .models import *
 admin.site.register(Clientes)
 admin.site.register(Contratos)
 admin.site.register(Pagos)
+admin.site.register(AdicionContrato)

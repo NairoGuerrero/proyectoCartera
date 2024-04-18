@@ -1,0 +1,40 @@
+{% extends "proyectoCartera/base.html" %}
+{% load crispy_forms_filters %}
+{% block title %}Crear Sub-Contrato{% endblock %}
+
+{% block body %}
+    {% load crispy_forms_tags %}
+   <div class="container-sm container-lg py-3">
+        <div class="card">
+            <div class="card-header fw-bold text-center" style="background-color: white;">
+                Agregar Sub-Contrato
+            </div>
+
+            <div class="card-body">
+                <form id="subcontrato-form" method="POST" class="form-control" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row fw-bold fs-7 text-capitalize">{{ formu | crispy }}</div>
+                    <div class="form-group">
+                        <div class="row m-3">
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('subcontrato-form');
+            form.addEventListener('submit', function(event) {
+                var nuevoValorInput = document.getElementById('id_nuevo_valor');
+                var nuevaFechaInput = document.getElementById('id_nueva_fecha');
+                if (!nuevoValorInput.value.trim() & !nuevaFechaInput.value.trim()) {
+                    event.preventDefault();
+                    alert('Los campos Nuevo Valor y Nueva Fecha no pueden estar vacíos. Por favor, complete alguno de los dos campos antes de enviar el formulario.');
+                }
+            });
+        });
+    </script>
+{% endblock %}

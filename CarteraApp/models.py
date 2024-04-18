@@ -24,11 +24,14 @@ class Contratos(models.Model):
     fecha_inicial = models.DateField()
     fecha_final = models.DateField()
     archivo_contrato = models.FileField(upload_to='contratos/', blank=True, null=True)
+    valor_subcontratos = models.IntegerField(default=0, blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
 
-    def __str__(self):
-        texto = "{0} - {1}"
-        return texto.format(self.numero_contrato, self.asesor)
+class AdicionContrato(models.Model):
+    contrato = models.ForeignKey(Contratos, on_delete=models.PROTECT)
+    nuevo_valor = models.IntegerField( blank=True, null=True)
+    nueva_fecha = models.DateField( blank=True, null=True)
+    archivo_nuevo = models.FileField(upload_to='contratos/')
 
 
 class Pagos(models.Model):
@@ -37,7 +40,7 @@ class Pagos(models.Model):
         ('recibo_de_caja_banco', 'Recibo de caja -  Banco'),
         ('abono', ' Abono')
     ]
-    numero_contrato = models.ForeignKey(Contratos, on_delete=models.PROTECT)
+    contrato = models.ForeignKey(Contratos, on_delete=models.PROTECT)
     tipo_pago = models.CharField(max_length=50, choices=tipo_pago_opciones)
     valor_pago = models.IntegerField()
     fecha_pago = models.DateField()

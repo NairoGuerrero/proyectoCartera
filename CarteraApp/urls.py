@@ -18,6 +18,12 @@ urlpatterns = [
     path('contratos-data/', ContratosListJson.as_view(), name='carteraApp_contratos_data'),
     path('clientes-data/', ClientesListJson.as_view(), name='carteraApp_clientes_data'),
     # path('pagos-data/', PagosListJson.as_view(), name='carteraApp_pagos_data'),
+    path('contrato/<numero_contrato>/', views.ver_contrato, name="carteraApp_ver_contrato"),
+    path('pagos-data/<numero_contrato>/', PagosListJson.as_view(), name='carteraApp_pagos_data'),
+    path('subcontratos-data/<numero_contrato>/', SubContratosListJson.as_view(), name='carteraApp_subcontratos_data'),
+    path('agregar-subcontrato/<numero_contrato>', views.agregar_subcontrato, name="carteraApp_agregar_subcontrato"),
+    path('filtro_contrato/', views.filtro_contratos, name='carteraApp_filtro_contrato'),
+
 ]
 
 urlpatterns += [

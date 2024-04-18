@@ -34,6 +34,15 @@
 
     <script>
         $('#example').DataTable({
+            dom: 'Plfrtip',
+            searchPanes: {
+                cascadePanes: true,
+                layout: 'columns-3',
+                columns: [2,3,4] // Índices de las columnas Asesor y Cliente en tu DataTable
+            },
+            columnDefs: [
+                {searchPanes: {show: true}, targets: [2,3,4]} // Habilitar Search Panes para las columnas Asesor y Cliente
+            ],
             responsive: true,
             language: {
                 "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
