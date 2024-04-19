@@ -5,16 +5,18 @@
 
 {% block body %}
 
-    {% if messages %}
-        {% for mensaje in messages %}
-            <script>
-                Swal.fire({
-                    "title": "{{ mensaje }}",
-                    "icon": "success"
-                })
-            </script>
-        {% endfor %}
-    {% endif %}
+    <div class="container mt-3">
+        <label for="searchContrato">
+            Contrato:
+            <select class="searchContrato js-states form-control" id="searchContrato" name="state">
+                <option value="">Selecciona un contrato...</option>
+            </select>
+        </label>
+
+        <button type="button" class="btn btn-dark" onclick="borrarFiltros()">Borrar filtros</button>
+
+
+    </div>
 
     <div class="m-3 text-center">
         <table id="example" class="display nowrap cell-border table-bordered table-striped mx-auto"></table>
@@ -24,53 +26,88 @@
     </div>
 
     <script>
+        let table = $('#example').DataTable({
+            responsive: true,
+            serverSide: true,
+            processing: true,
+            searching: true,
+            ajax: {
+                url: '{% url "carteraApp_contratos_data" %}',
+                data: function (d) {
+                    return $.extend({}, d, {
+                        search_contrato: $('#searchContrato').val().toLowerCase(),
+                    });
+                }
+            },
+            columnDefs: [
+                {targets: [1, 2, 3]} // Habilitar Search Panes para las columnas Asesor y Cliente
+            ],
+            columns: [
+                {data: 'numero_contrato', title: '# Contrato'},
+                {data: 'asesor', title: 'Asesor'},
+                {data: 'cliente_id', title: 'Cliente'},
+                {data: 'valor', title: 'Valor (COP)'},
+                {data: 'saldo', title: 'Saldo (COP)'},
+                {data: 'fecha_inicial', title: 'Fecha Inicial'},
+                {data: 'fecha_final', title: 'Fecha Final'},
+                {
+                    data: 'dias_restantes',
+                    title: 'Dias restantes',
+                    createdCell: function (cell, cellData, rowData, rowIndex, colIndex) {
+                        let bg_color = '#FF6A53';
+                        let txt_color = '#F2F2F2';
+
+                        if (rowData.dias_restantes >= 0) {
+                            bg_color = '#D7DE99';
+                            txt_color = '#324733';
+                        }
+
+                        cell.style.backgroundColor = bg_color;
+                        cell.style.color = txt_color;
+                        cell.style.fontSize = '16px';
+                        cell.style.fontWeight = 'bold';
+                    }
+                },
+                {
+                    data: null, title: 'Opciones',
+                    render: function (data, type, row, meta) {
+                        return '<button class="btn btn-info" onclick="editarContrato(' + row.numero_contrato + ')">Editar</button> ' +
+                            ' <button class="btn btn-success" onclick="vista_pago(' + row.numero_contrato + ')">Pago</button>' +
+                            ' <button class="btn btn-success" onclick="vista_ver_contrato(' + row.numero_contrato + ')">Ver</button>';
+                    }
+                },
+                {
+                    data: 'archivo_contrato', title: 'Archivo Contrato',
+                    render: function (data, type, row, meta) {
+                        if (data) {
+                            return '<a href="' + data + '" target="_blank"><img src="{% static 'img/file-earmark-minus.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
+                        } else {
+                            return data
+                        }
+                    }
+                },
+            ]
+        });
+
         $(document).ready(function () {
-            $('#example').DataTable({
-                responsive: true,
-                serverSide: true,
-                processing: true,
-                searching: true,
-                ajax: '{% url "carteraApp_contratos_data" %}',
-                language: {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
-                },
-                dom: 'Plfrtip',
-                searchPanes: {
-                    cascadePanes: true,
-                    layout: 'columns-2',
-                    columns: [1, 2] // Índices de las columnas Asesor y Cliente en tu DataTable
-                },
-                columnDefs: [
-                    {searchPanes: {show: true}, targets: [1, 2]} // Habilitar Search Panes para las columnas Asesor y Cliente
-                ],
-                columns: [
-                    {data: 'numero_contrato', title: '# Contrato'},
-                    {data: 'asesor', title: 'Asesor'},
-                    {data: 'cliente_id', title: 'Cliente'},
-                    {data: 'valor', title: 'Valor (COP)'},
-                    {data: 'saldo', title: 'Saldo (COP)'},
-                    {data: 'fecha_inicial', title: 'Fecha Inicial'},
-                    {data: 'fecha_final', title: 'Fecha Final'},
-                    {data: 'dias_restantes', title: 'Dias restantes'},
-                    {
-                        data: null, title: 'Opciones',
-                        render: function (data, type, row, meta) {
-                            return '<button class="btn btn-info" onclick="editarContrato(' + row.numero_contrato + ')">Editar</button> ' +
-                                ' <button class="btn btn-success" onclick="vista_pago(' + row.numero_contrato + ')">Pago</button>' +
-                                ' <button class="btn btn-success" onclick="vista_ver_contrato(' + row.numero_contrato + ')">Ver</button>';
-                        }
-                    },
-                    {
-                        data: 'archivo_contrato', title: 'Archivo Contrato',
-                        render: function (data, type, row, meta) {
-                            if (data) {
-                                return '<a href="' + data + '" target="_blank"><img src="{% static 'img/file-earmark-minus.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
-                            } else {
-                                return data
-                            }
-                        }
-                    },
-                ]
+            table.draw();
+            $('#searchContrato').on("keyup change", function () {
+                table.draw();
+            });
+
+            $('.searchContrato').select2({
+                placeholder: 'Selecciona un contrato...',
+                ajax: {
+                    url: '{% url 'carteraApp_obtener_opciones_filtros' 'Contratos'%}',
+                    dataType: 'json',
+                    data: function (params) {
+                        return {
+                            search: params.term,
+                            variable: 'numero_contrato',
+                        };
+                    }
+                    // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+                }
             });
         });
 
@@ -85,8 +122,24 @@
         function vista_ver_contrato(contratoId) {
             window.location.href = '{% url 'carteraApp_ver_contrato' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
         }
+
+        function borrarFiltros() {
+            $('#searchContrato').val(null).trigger('change');
+        }
     </script>
     <script src="{% static 'js/filtro_contrato.js' %}"></script>
+
+    {% if messages %}
+        {% for mensaje in messages %}
+            <script>
+                Swal.fire({
+                    "title": "{{ mensaje }}",
+                    "icon": "success"
+                })
+            </script>
+        {% endfor %}
+    {% endif %}
+
 {% endblock %}
 
 

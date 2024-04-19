@@ -10,11 +10,8 @@ import datetime
 from django.utils.translation import gettext as _
 
 
-
 class ContratosListJson(BaseDatatableView):
     model = Contratos
-
-
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -31,18 +28,22 @@ class ContratosListJson(BaseDatatableView):
     def filter_queryset(self, qs):
         # Obtén el valor de búsqueda proporcionado por el usuario
         search = self.request.GET.get('search[value]', None)
-        # Aplica el filtro solo si hay un valor de búsqueda
-        if search:
-            # Verifica si el valor de búsqueda es numérico
-            if search.isdigit():
-                # Aplica el filtro a la queryset utilizando filter directamente
-                qs = qs.filter(
-                    Q(numero_contrato__icontains=search) |
-                    Q(cliente__cedula__icontains=search)
-                )
-            else:
-                qs = qs.filter(Q(asesor__icontains=search))
-        # Devuelve la queryset filtrada
+        search_contrato = self.request.GET.get('search_contrato', None)
+
+        filtros = [search, search_contrato]
+
+        hay_datos = False
+        for elemento in filtros:
+            if elemento != '':
+                hay_datos = True
+                break  # Si se encuentra al menos un dato, podemos detener la iteración
+
+        if hay_datos:
+            qs = qs.filter(
+                Q(numero_contrato=search_contrato)
+            )
+        else:
+            qs = qs.all()
         return qs
 
     def prepare_results(self, qs):
@@ -51,27 +52,24 @@ class ContratosListJson(BaseDatatableView):
         today = datetime.date.today()
 
         for item in qs:
-
             try:
                 archivo = item.archivo_contrato.url
             except:
                 archivo = ''
 
             dias_restantes = (item.fecha_final - today).days if item.fecha_final else None
-            dias_restantes_texto = f"{dias_restantes} días" if dias_restantes is not None else None
             prueba.append({
                 'numero_contrato': item.numero_contrato,
                 'asesor': item.asesor,
                 'cliente_id': item.cliente.nombre,
                 'valor': locale.format_string("%.0f", item.valor, grouping=True),
                 'saldo': locale.format_string("%.0f", saldo_pagos(item.numero_contrato)[2], grouping=True),
-                'dias_restantes': dias_restantes_texto,
+                'dias_restantes': dias_restantes,
                 'fecha_inicial': item.fecha_inicial.strftime(
                     '%d de %B del %Y') if item.fecha_inicial else item.fecha_inicial,
                 'fecha_final': item.fecha_final.strftime('%d de %B del %Y') if item.fecha_final else item.fecha_final,
                 'archivo_contrato': archivo
             })
-        print('obserevar : ', prueba)
         return prueba
 
 
@@ -499,11 +497,9 @@ def ver_contrato(request, numero_contrato):
 
 
 def filtro_contratos(request):
-
     claves_contratos = ['cliente__nombre', 'asesor']
     dato_cliente = set()
     dato_asesor = set()
-
 
     for k in claves_contratos:
         contratos = Contratos.objects.all().values_list(k, flat=True)
@@ -513,10 +509,39 @@ def filtro_contratos(request):
             elif k == 'asesor':
                 dato_asesor.add(item)
 
-
     data = {
         'Cliente': list(dato_cliente),
         'Asesor': list(dato_asesor)
 
     }
     return JsonResponse(data)
+
+
+def obtener_opciones_filtros(request, tabla):
+    opciones = {
+        "results": [],
+    }
+
+    try:
+        modelos = get_all_models()
+        modelo = modelos[tabla]
+
+        variable = request.GET.get('variable')
+        search = request.GET.get('search')
+
+        if search:
+            datos = modelo.objects.filter(**{f'{variable}__icontains': search})
+        else:
+            datos = modelo.objects.all()  # TODO: Evaluar que hacer cuando no haya filtro, si no cargar nada, cargar todo o carga parcial
+
+        for opcion in datos:
+            opciones['results'].append(
+                {
+                    "id": getattr(opcion, variable),
+                    "text": getattr(opcion, variable)
+                }
+            )
+    except Exception as e:
+        print(e)
+
+    return JsonResponse(opciones)
