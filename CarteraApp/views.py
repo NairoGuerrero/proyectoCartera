@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 import locale
 import datetime
+from datetime import datetime as dt
 from django.utils.translation import gettext as _
 
 
@@ -26,24 +27,56 @@ class ContratosListJson(BaseDatatableView):
             return super(ContratosListJson, self).render_column(row, column)
 
     def filter_queryset(self, qs):
-        # Obtén el valor de búsqueda proporcionado por el usuario
-        search = self.request.GET.get('search[value]', None)
+
+        # Obteniendo datos para filtrar
+        sort_by = self.request.GET.get('sort_by', None)
+        sorting_direction = self.request.GET.get('sorting_direction', None)
         search_contrato = self.request.GET.get('search_contrato', None)
+        search_asesor = self.request.GET.get('search_asesor', None)
+        search_fecha_start = self.request.GET.get('search_fecha_start', None)
+        search_fecha_end = self.request.GET.get('search_fecha_end', None)
 
-        filtros = [search, search_contrato]
+        # Creando el Query por fecha
+        filtro_fecha = Q()
+        try:
+            if search_fecha_start is not None:
+                fecha_inicio = dt.strptime(search_fecha_start, '%Y-%m-%d')
 
-        hay_datos = False
-        for elemento in filtros:
-            if elemento != '':
-                hay_datos = True
-                break  # Si se encuentra al menos un dato, podemos detener la iteración
+                if search_fecha_end is not None:
+                    fecha_fin = dt.strptime(search_fecha_end, '%Y-%m-%d')
+                else:
+                    fecha_fin = fecha_inicio
 
-        if hay_datos:
-            qs = qs.filter(
-                Q(numero_contrato=search_contrato)
-            )
+                fecha_fin.replace(hour=23, minute=59, second=59)
+                filtro_fecha = Q(fecha_inicial__range=(fecha_inicio, fecha_fin))
+        except:
+            print("No se pudo crear el filtro de fecha")
+
+        # Creando el resto de filtros y creando una lista con ellos
+        filtros = [
+            Q(numero_contrato=search_contrato),
+            Q(asesor__icontains=search_asesor),
+            filtro_fecha,
+        ]
+
+        # Quitando los filtros que no tienen nada
+        filtros_validos = [filtro for filtro in filtros if filtro.children and filtro.children[0][1] != '']
+
+        # Creando el Query
+        filtro_completo = Q()
+        for filtro in filtros_validos:
+            filtro_completo |= filtro  # FIXME: Determinar si se quiere que sea una OR o una AND
+
+
+        # Filtrando
+        # FIXME: Arreglar el ordenamiento por saldo y días restantes
+        if sort_by:
+            sort_by = sort_by if sorting_direction == 'desc' else f'-{sort_by}'
+        if len(filtros_validos) > 0:
+            qs = qs.filter(filtro_completo).order_by(sort_by) if sort_by else qs.filter(filtro_completo)
         else:
-            qs = qs.all()
+            qs = qs.all().order_by(sort_by) if sort_by else qs.all()
+
         return qs
 
     def prepare_results(self, qs):
@@ -532,15 +565,18 @@ def obtener_opciones_filtros(request, tabla):
         if search:
             datos = modelo.objects.filter(**{f'{variable}__icontains': search})
         else:
-            datos = modelo.objects.all()  # TODO: Evaluar que hacer cuando no haya filtro, si no cargar nada, cargar todo o carga parcial
+            datos = modelo.objects.all()  # FIXME: Evaluar que hacer cuando no haya filtro, si no cargar nada, cargar todo o carga parcial
 
-        for opcion in datos:
-            opciones['results'].append(
-                {
-                    "id": getattr(opcion, variable),
-                    "text": getattr(opcion, variable)
-                }
-            )
+        datos = datos.values(variable).distinct()
+
+        opciones['results'] = [
+            {
+                "id": opcion[variable] if isinstance(opcion, dict) else getattr(opcion, variable),
+                "text": opcion[variable] if isinstance(opcion, dict) else getattr(opcion, variable)
+            }
+            for opcion in datos
+        ]
+
     except Exception as e:
         print(e)
 
