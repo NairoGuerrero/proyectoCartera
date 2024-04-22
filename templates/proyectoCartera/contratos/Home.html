@@ -5,72 +5,140 @@
 
 {% block body %}
 
-    <div class="container mt-3">
-        <div class="row">
-            <label class="col-3" for="searchContrato">
-                Contrato:
-                <select class="searchContrato js-states form-control" id="searchContrato" name="state">
-                    <option value="">Selecciona un contrato...</option>
-                </select>
-            </label>
 
-            <label class="col-3" for="searchAsesor">
-                Asesor:
-                <select class="searchAsesor js-states form-control" id="searchAsesor" name="state">
-                    <option value="">Selecciona un asesor...</option>
-                </select>
-            </label>
+    <div class="conteiner">
+        <form method="post">
+            {% csrf_token %}
+        </form>
+        <div class="row justify-content-center">
+            <div class="card shadow-lg o-hidden border-0 my-1">
+                <div class="card-body">
+                    <div class="row d-flex justify-content-center my-0" style="margin: 50px;">
+                        <div class="col p-3">
+                            <fieldset class="border  border-2 border-dark  p-4">
+                                <legend class="fw-bold">Filtros</legend>
+                                <div class="row m-3">
+                                    <div class="col-2 fs-6">
+                                        <span class="fw-bold"> Contrato : </span>
+                                        <select class="searchContrato js-states form-control" id="searchContrato"
+                                                name="state">
+                                            <option value="">Selecciona un contrato...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-2 fs-6">
+                                        <span class="fw-bold"> Asesor : </span>
+                                        <select class="searchAsesor js-states form-control form-select"
+                                                id="searchAsesor"
+                                                name="state">
+                                            <option value="">Selecciona un asesor...</option>
+                                        </select>
+                                    </div>
 
-            <div class="col-3">
-                <label for="searchFecha" class="form-label">Rango de fecha</label>
-                <input type="text" class="form-control" id="searchFecha"
-                       placeholder="Selecciona el rango de consulta">
+                                    <div class="col-3 fs-6">
+                                        <span class="fw-bold"> Rango de fecha : </span>
+                                        <input type="text" class="form-control" id="searchFecha"
+                                               placeholder="Selecciona el rango de consulta">
+                                    </div>
+
+
+                                    <div class="col-2">
+                                        <span class="fw-bold">Ordenar : </span>
+                                        <select class="form-select" id="sortBy" aria-label="Default select example">
+                                            <option selected disabled value="">Ordenar por...</option>
+                                            <option value="numero_contrato">Contrato</option>
+                                            <option value="asesor">Asesor</option>
+                                            <option value="cliente">Cliente</option>
+                                            <option value="valor">Valor</option>
+                                            <option value="fecha_inicial">Fecha inicial</option>
+                                            <option value="fecha_final">Fecha final</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-1">
+                                        <input type="checkbox" class="btn-check" id="sortingDirection"
+                                               autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="sortingDirection">
+                                            <i class="bi bi-funnel-fill"></i>
+                                        </label>
+                                    </div>
+
+                                    <div class="col-2 fs-6">
+                                        <div class="row">
+                                            <button type="button" class="btn btn-dark" onclick="borrarFiltros()">
+                                                Borrar
+                                                filtros
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <div class="col p-3">
+                            <fieldset class="border  border-2 border-dark  p-4">
+                                <legend class="fw-bold">Contratos</legend>
+                                <div class="container">
+                                    <div class="ext-center">
+                                        <table id="tablaContratos"
+                                               class="display nowrap cell-border table-bordered table-striped mx-auto"></table>
+                                    </div>
+                                    <div class="row m-3">
+                                        <a href="{% url 'carteraApp_agregar_contrato' %}" class="btn btn-primary">
+                                            Agregar Contrato </a>
+                                    </div>
+                                    <div class="row m-3">
+                                        <button class="btn btn-primary" onclick="enviarDatos()"> PDF</button>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="col-2">
-                <label for="sortBy" class="form-label">Ordenar</label>
-                <select class="form-select" id="sortBy" aria-label="Default select example">
-                    <option selected disabled value="">Ordenar por...</option>
-                    <option value="numero_contrato">Contrato</option>
-                    <option value="asesor">Asesor</option>
-                    <option value="cliente">Cliente</option>
-                    <option value="valor">Valor</option>
-                    <option value="saldo">Saldo</option>
-                    <option value="fecha_inicial">Fecha inicial</option>
-                    <option value="fecha_final">Fecha final</option>
-                    <option value="dias_restantes">Días restantes</option>
-                </select>
-            </div>
-
-            <div class="col">
-                <input type="checkbox" class="btn-check" id="sortingDirection" autocomplete="off" >
-                <label class="btn btn-outline-primary" for="sortingDirection">
-                    <i class="bi bi-funnel-fill"></i>
-                </label>
-            </div>
-        </div>
-
-        <div class="row mt-3">
-            <button type="button" class="btn btn-dark" onclick="borrarFiltros()">Borrar filtros</button>
         </div>
     </div>
 
-    <div class="container">
-        <div class="m-3 text-center">
-            <table id="tablaContratos" class="display nowrap cell-border table-bordered table-striped mx-auto"></table>
-        </div>
-        <div class="row m-3">
-            <a href="{% url 'carteraApp_agregar_contrato' %}" class="btn btn-primary"> Agregar Contrato </a>
-        </div>
-    </div>
+
+
 
 
     <script>
+
+        function enviarDatos() {
+
+            var search_contrato = $('#searchContrato').val().toLowerCase();
+            var search_asesor = $('#searchAsesor').val()
+            const dateRangeValue = $('#searchFecha').val();
+            const dateRangeArray = dateRangeValue.split(' to ');
+            const startDate = dateRangeArray[0];
+            const endDate = dateRangeArray[1];
+            var search_fecha_start = startDate;
+            var search_fecha_end = endDate;
+            var csrftoken = $('input[name=csrfmiddlewaretoken]').val();
+
+
+            $.ajax({
+                url: '{% url "carteraApp_pdf" %}',
+                type: 'POST', // O 'GET' dependiendo de tu vista en Django
+                headers: {'X-CSRFToken': csrftoken},
+                data: {
+
+                    'search_contrato': search_contrato,
+                    'search_asesor': search_asesor,
+                    'search_fecha_start': search_fecha_start,
+                    'search_fecha_end': search_fecha_end
+
+                },
+            });
+        }
+
+
         let tablaContratos = $('#tablaContratos').DataTable({
             responsive: true,
             serverSide: true,
             processing: true,
-            searching: true,
+            searching: false,
+            lengthChange: false,
             ordering: false,
             ajax: {
                 url: '{% url "carteraApp_contratos_data" %}',
@@ -91,9 +159,12 @@
                     });
                 }
             },
-            columnDefs: [
-                {targets: [1, 2, 3]} // Habilitar Search Panes para las columnas Asesor y Cliente
-            ],
+            language: {
+                "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json",
+                info: "",
+                infoFiltered: "",
+                infoEmpty: "",
+            },
             columns: [
                 {data: 'numero_contrato', title: '# Contrato'},
                 {data: 'asesor', title: 'Asesor'},
@@ -151,6 +222,7 @@
             });
 
             $('.searchContrato').select2({
+                theme: 'bootstrap-5',
                 placeholder: 'Selecciona un contrato...',
                 ajax: {
                     url: '{% url 'carteraApp_obtener_opciones_filtros' 'Contratos'%}',
@@ -165,6 +237,7 @@
             });
 
             $('.searchAsesor').select2({
+                theme: 'bootstrap-5',
                 placeholder: 'Selecciona un contrato...',
                 ajax: {
                     url: '{% url 'carteraApp_obtener_opciones_filtros' 'Contratos'%}',

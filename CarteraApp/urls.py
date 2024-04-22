@@ -24,6 +24,7 @@ urlpatterns = [
     path('agregar-subcontrato/<numero_contrato>', views.agregar_subcontrato, name="carteraApp_agregar_subcontrato"),
     path('filtro_contrato/', views.filtro_contratos, name='carteraApp_filtro_contrato'),
     path('obtener_opciones_filtros/<tabla>/', views.obtener_opciones_filtros, name='carteraApp_obtener_opciones_filtros'),
+    path('pdf/', views.pdf_contratos, name='carteraApp_pdf'),
 
 ]
 

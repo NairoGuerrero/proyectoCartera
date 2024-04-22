@@ -55,19 +55,45 @@
                     <div class="col p-3">
                         <fieldset class="border  border-2 border-dark  p-4">
                             <legend class="fw-bold">Pagos Realizados</legend>
+                            <div class="row row-cols-3 m-3">
+                                <div class="col fs-6">
+                                    <span class="fw-bold"> Tipo de pago : </span>
+                                    <select class="searchTipoPgo js-states form-control" id="searchTipoPgo"
+                                            name="state">
+                                        <option value="">Seleccione un tipo de pago...</option>
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="col fs-6">
+                                        <span class="fw-bold"> Rango de fecha : </span>
+                                        <input type="text" class="form-control" id="searchFecha"
+                                               placeholder="Selecciona el rango de consulta">
+                                    </div>
+                                </div>
+                                <div class="col fs-6">
+                                    <div class="row py-4">
+                                <button type="button" class="btn btn-dark" onclick="borrarFiltros()">Borrar
+                                    filtros
+                                </button>
+                            </div>
+                                </div>
+                            </div>
+
                             <div class="table-responsive p-3 text-center">
                                 <table id="tabla_pagos"
-                                       class="display compact cell-border table-bordered table-striped mx-auto"></table>
+                                       class="display nowrap cell-border table-bordered table-striped mx-auto"></table>
                             </div>
                             <div class="row m-3">
                                 {% if informacion_pagos.5 > 0 %}
-                                    <a href='{% url 'carteraApp_agregar_pago' informacion_contrato.numero_contrato %}' class="btn btn-primary">Realizar
+                                    <a href='{% url 'carteraApp_agregar_pago' informacion_contrato.numero_contrato %}'
+                                       class="btn btn-primary">Realizar
                                         pago</a>
                                 {% else %}
                                     <button class="btn btn-primary" disabled>Realizar pago</button>
                                 {% endif %}
 
                             </div>
+
                         </fieldset>
                     </div>
                     <div class="col p-3">
@@ -104,44 +130,108 @@
 
     <script>
         //tabla pagos
-        $(document).ready(function () {
-            $('#tabla_pagos').DataTable({
-                pageLength: 5,
-                responsive: true,
-                serverSide: true,
-                processing: true,
-                searching: true,
-                ajax: '{% url "carteraApp_pagos_data" informacion_contrato.numero_contrato %}',
-                language: {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
-                },
-                columns: [
-                    {data: 'contrato', title: '# Contrato'},
-                    {data: 'tipo_pago', title: 'Tipo de pago'},
-                    {data: 'valor_pago', title: 'Valor del pago (COP)'},
-                    {data: 'fecha_pago', title: 'Fecha del pago'},
-                    {
-                        data: 'archivo_pago', title: 'Archivo Pago',
-                        render: function (data, type, row, meta) {
-                            if (data) {
-                                return '<a href="' + data + '" target="_blank"><img src="{% static 'img/file-earmark-minus.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
-                            } else {
-                                return data
-                            }
-                        }
-                    },
-                    {
-                        data: null, title: 'Opciones',
-                        render: function (data, type, row, meta) {
-                            return '<button class="btn btn-info" onclick=" editarPago(' + row.id + ')">Editar</button> ';
+
+        let tablaPagos = $('#tabla_pagos').DataTable({
+            pageLength: 5,
+            responsive: true,
+            serverSide: true,
+            processing: true,
+            searching: false,
+            lengthChange: false,
+
+            ajax: {
+                url: '{% url "carteraApp_pagos_data" informacion_contrato.numero_contrato %}',
+                data: function (d) {
+
+                    // Obtener el valor del input de rango de fechas
+                    const dateRangeValue = $('#searchFecha').val();
+                    const dateRangeArray = dateRangeValue.split(' to ');
+                    const startDate = dateRangeArray[0];
+                    const endDate = dateRangeArray[1];
+
+                    return $.extend({}, d, {
+
+                        search_tipo_pago: $('#searchTipoPgo').val().toLowerCase(),
+                        search_fecha_start: startDate,
+                        search_fecha_end: endDate,
+
+                    });
+                }
+            },
+            language: {
+                "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json",
+                info: "",
+                infoFiltered: "",
+                infoEmpty: "",
+            },
+            columns: [
+                {data: 'contrato', title: '# Contrato', visible: false},
+                {data: 'tipo_pago', title: 'Tipo de pago'},
+                {data: 'valor_pago', title: 'Valor del pago (COP)'},
+                {data: 'fecha_pago', title: 'Fecha del pago'},
+                {
+                    data: 'archivo_pago', title: 'Archivo Pago', orderable: false,
+                    render: function (data, type, row, meta) {
+                        if (data) {
+                            return '<a href="' + data + '" target="_blank"><img src="{% static 'img/file-earmark-minus.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';
+                        } else {
+                            return data
                         }
                     }
-                ]
+                },
+                {
+                    data: null, title: 'Opciones', orderable: false,
+                    render: function (data, type, row, meta) {
+                        return '<button class="btn btn-info" onclick=" editarPago(' + row.id + ')">Editar</button> ';
+                    }
+                }
+            ]
+        });
+
+        $(document).ready(function () {
+            tablaPagos.draw();
+
+            /* Inicio filtros */
+
+            $('#searchTipoPgo').on("change", function () {
+                tablaPagos.draw();
             });
+
+            $('.searchTipoPgo').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Selecciona un contrato...',
+                ajax: {
+                    url: '{% url 'carteraApp_obtener_opciones_filtros' 'Pagos'%}',
+                    dataType: 'json',
+                    data: function (params) {
+                        return {
+                            search: params.term,
+                            variable: 'tipo_pago',
+                        };
+                    }
+                }
+            });
+            const searchFecha = flatpickr('#searchFecha', {
+                locale: "es",
+                mode: "range",
+                time_24hr: true,
+                dateFormat: "Y-m-d",
+                maxDate: new Date(),
+                onClose: function (selectedDates, dateStr, instance) {
+                    tablaPagos.draw();
+                }
+            });
+            /* Fin filtros */
+
         });
 
         function editarPago(contratoId) {
             window.location.href = '{% url 'carteraApp_editar_pago' 'numero_contrato' %}'.replace('numero_contrato', contratoId)
+        }
+
+        function borrarFiltros() {
+            $('#searchFecha').val(null);
+            $('#searchTipoPgo').val(null).trigger('change');
         }
 
         //fin tabla pagos
@@ -154,17 +244,21 @@
                 responsive: true,
                 serverSide: true,
                 processing: true,
-                searching: true,
+                searching: false,
+                lengthChange: false,
                 ajax: '{% url "carteraApp_subcontratos_data" informacion_contrato.numero_contrato %}',
                 language: {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json"
+                    "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json",
+                    info: "",
+                    infoFiltered: "",
+                    infoEmpty: "",
                 },
                 columns: [
                     {data: 'contrato', title: '# Contrato'},
                     {data: 'nuevo_valor', title: 'Valor (COP)'},
                     {data: 'nueva_fecha', title: 'Fecha'},
                     {
-                        data: 'archivo_nuevo', title: 'Archivo contrato',
+                        data: 'archivo_nuevo', title: 'Archivo contrato', orderable: false,
                         render: function (data, type, row, meta) {
                             if (data) {
                                 return '<a href="' + data + '" target="_blank"><img src="{% static 'img/file-earmark-minus.svg' %}" class="bi d-block mx-auto mb-1" width="24" height="24"></a>';

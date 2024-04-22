@@ -9,8 +9,57 @@ import locale
 import datetime
 from datetime import datetime as dt
 from django.utils.translation import gettext as _
+import io
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
+from django.views.decorators.csrf import csrf_exempt
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from io import BytesIO
+
+def pdf_contratos(request):
+    if request.method == 'POST':
+        # Obtén los datos enviados en la solicitud POST
+        contrato = request.POST.get('search_contrato')
+        asesor = request.POST.get('search_asesor')
+        search_fecha_start = request.POST.get('search_fecha_start')
+        search_fecha_end = request.POST.get('search_fecha_end')
+
+        filtro_fecha = Q()
+        try:
+            if search_fecha_start is not None:
+                fecha_inicio = dt.strptime(search_fecha_start, '%Y-%m-%d')
+
+                if search_fecha_end is not None:
+                    fecha_fin = dt.strptime(search_fecha_end, '%Y-%m-%d')
+                else:
+                    fecha_fin = fecha_inicio
+
+                fecha_fin = fecha_fin.replace(hour=23, minute=59, second=59)
+                filtro_fecha = Q(fecha_inicial__range=(fecha_inicio, fecha_fin))
+        except:
+            print("No se pudo crear el filtro de fecha")
+
+        # Creando el resto de filtros y creando una lista con ellos
+        filtros = [
+            Q(numero_contrato=contrato),
+            Q(asesor__icontains=asesor),
+            filtro_fecha,
+        ]
+
+        filtros_validos = [filtro for filtro in filtros if filtro.children and filtro.children[0][1] != '']
+        filtro_completo = Q()
+        for filtro in filtros_validos:
+            filtro_completo |= filtro
+        contratos = Contratos.objects.filter(filtro_completo).values()
+        print(contratos)
 
 
+def obtener_datos_contratos(list):
+    pass
 class ContratosListJson(BaseDatatableView):
     model = Contratos
 
@@ -35,6 +84,8 @@ class ContratosListJson(BaseDatatableView):
         search_asesor = self.request.GET.get('search_asesor', None)
         search_fecha_start = self.request.GET.get('search_fecha_start', None)
         search_fecha_end = self.request.GET.get('search_fecha_end', None)
+
+
 
         # Creando el Query por fecha
         filtro_fecha = Q()
@@ -66,7 +117,6 @@ class ContratosListJson(BaseDatatableView):
         filtro_completo = Q()
         for filtro in filtros_validos:
             filtro_completo |= filtro  # FIXME: Determinar si se quiere que sea una OR o una AND
-
 
         # Filtrando
         # FIXME: Arreglar el ordenamiento por saldo y días restantes
@@ -369,20 +419,51 @@ class PagosListJson(BaseDatatableView):
         return super(PagosListJson, self).render_column(row, column)
 
     def filter_queryset(self, qs):
-        # Obtén el valor de búsqueda proporcionado por el usuario
-        search = self.request.GET.get('search[value]', None)
-        # Aplica el filtro solo si hay un valor de búsqueda
-        if search:
-            # Verifica si el valor de búsqueda es numérico
-            if search.isdigit():
-                # Aplica el filtro a la queryset utilizando filter directamente
-                qs = qs.filter(
-                    Q(numero_contrato__icontains=search) |
-                    Q(cliente__cedula__icontains=search)
-                )
-            else:
-                qs = qs.filter(Q(asesor__icontains=search))
-        # Devuelve la queryset filtrada
+        search_tipo_pago = self.request.GET.get('search_tipo_pago', None)
+        search_fecha_start = self.request.GET.get('search_fecha_start', None)
+        search_fecha_end = self.request.GET.get('search_fecha_end', None)
+
+        # Creando el Query por fecha
+        filtro_fecha = Q()
+        try:
+            if search_fecha_start is not None:
+                fecha_inicio = dt.strptime(search_fecha_start, '%Y-%m-%d')
+
+                if search_fecha_end is not None:
+                    fecha_fin = dt.strptime(search_fecha_end, '%Y-%m-%d')
+                else:
+                    fecha_fin = fecha_inicio
+
+                fecha_fin.replace(hour=23, minute=59, second=59)
+                filtro_fecha = Q(fecha_pago__range=(fecha_inicio, fecha_fin))
+        except:
+            print("No se pudo crear el filtro de fecha pagos")
+
+
+
+
+        # Creando el resto de filtros y creando una lista con ellos
+        filtros = [
+            Q(tipo_pago=search_tipo_pago),
+            filtro_fecha,
+        ]
+
+        # Quitando los filtros que no tienen nada
+        filtros_validos = [filtro for filtro in filtros if filtro.children and filtro.children[0][1] != '']
+
+        # Creando el Query
+        filtro_completo = Q()
+        for filtro in filtros_validos:
+            filtro_completo |= filtro  # FIXME: Determinar si se quiere que sea una OR o una AND
+
+        # Filtrando
+        # FIXME: Arreglar el ordenamiento por saldo y días restantes
+
+        if len(filtros_validos) > 0:
+            qs = qs.filter(filtro_completo)
+        else:
+            qs = qs.all()
+
         return qs
 
     def prepare_results(self, qs):
@@ -561,21 +642,30 @@ def obtener_opciones_filtros(request, tabla):
 
         variable = request.GET.get('variable')
         search = request.GET.get('search')
-
+        choices = dict(modelo._meta.get_field(variable).flatchoices)
         if search:
+
             datos = modelo.objects.filter(**{f'{variable}__icontains': search})
+            print(datos)
         else:
             datos = modelo.objects.all()  # FIXME: Evaluar que hacer cuando no haya filtro, si no cargar nada, cargar todo o carga parcial
 
         datos = datos.values(variable).distinct()
 
-        opciones['results'] = [
-            {
-                "id": opcion[variable] if isinstance(opcion, dict) else getattr(opcion, variable),
-                "text": opcion[variable] if isinstance(opcion, dict) else getattr(opcion, variable)
-            }
-            for opcion in datos
-        ]
+        if choices:
+            for dato in datos:
+                dato[f'{variable}_'] = choices[dato.get(variable)]
+
+        print(datos)
+
+        for opcion in datos:
+            variable_txt = variable if not choices else f'{variable}_'
+            opciones['results'].append(
+                {
+                    "id": opcion[variable] if isinstance(opcion, dict) else getattr(opcion, variable),
+                    "text": opcion[variable_txt] if isinstance(opcion, dict) else getattr(opcion, variable)
+                }
+            )
 
     except Exception as e:
         print(e)
