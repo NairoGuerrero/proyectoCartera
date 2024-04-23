@@ -98,16 +98,12 @@
         </div>
     </div>
 
-
-
-
-
     <script>
+        {#window.location.href = '{% url 'carteraApp_pdf' %}' #}
 
         function enviarDatos() {
-
             var search_contrato = $('#searchContrato').val().toLowerCase();
-            var search_asesor = $('#searchAsesor').val()
+            var search_asesor = $('#searchAsesor').val();
             const dateRangeValue = $('#searchFecha').val();
             const dateRangeArray = dateRangeValue.split(' to ');
             const startDate = dateRangeArray[0];
@@ -116,19 +112,25 @@
             var search_fecha_end = endDate;
             var csrftoken = $('input[name=csrfmiddlewaretoken]').val();
 
-
             $.ajax({
                 url: '{% url "carteraApp_pdf" %}',
-                type: 'POST', // O 'GET' dependiendo de tu vista en Django
+                type: 'POST',
                 headers: {'X-CSRFToken': csrftoken},
                 data: {
-
                     'search_contrato': search_contrato,
                     'search_asesor': search_asesor,
                     'search_fecha_start': search_fecha_start,
                     'search_fecha_end': search_fecha_end
-
                 },
+                success: function (response) {
+                    var blob = new Blob([response], {type: 'application/pdf'});
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = "informe_contratos.pdf"; // Nombre del archivo para descargar
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
             });
         }
 
@@ -153,14 +155,13 @@
                         sort_by: $('#sortBy').val(),
                         sorting_direction: $('#sortingDirection').prop('checked') ? 'asc' : 'desc',
                         search_contrato: $('#searchContrato').val().toLowerCase(),
-                        search_asesor: $('#searchAsesor').val().toLowerCase(),
+                        search_asesor: $('#searchAsesor').val(),
                         search_fecha_start: startDate,
                         search_fecha_end: endDate,
                     });
                 }
             },
             language: {
-                "url": "//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json",
                 info: "",
                 infoFiltered: "",
                 infoEmpty: "",

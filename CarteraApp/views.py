@@ -1,3 +1,6 @@
+import os
+from django.conf import settings
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from .forms import *
 from django.contrib import messages
@@ -18,7 +21,27 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
+from django.http import HttpResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from io import BytesIO
+
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.units import inch
+import io
+from reportlab.pdfgen import canvas
+from django.http import FileResponse
+from datetime import datetime as dt
+from .models import Contratos
+import os
+from django.conf import settings
+from datetime import timedelta
+from random import randint
+from .models import Contratos, Clientes
+
 
 def pdf_contratos(request):
     if request.method == 'POST':
@@ -43,10 +66,9 @@ def pdf_contratos(request):
         except:
             print("No se pudo crear el filtro de fecha")
 
-        # Creando el resto de filtros y creando una lista con ellos
         filtros = [
             Q(numero_contrato=contrato),
-            Q(asesor__icontains=asesor),
+            Q(asesor=asesor),
             filtro_fecha,
         ]
 
@@ -54,12 +76,85 @@ def pdf_contratos(request):
         filtro_completo = Q()
         for filtro in filtros_validos:
             filtro_completo |= filtro
-        contratos = Contratos.objects.filter(filtro_completo).values()
+        contratos = Contratos.objects.filter(filtro_completo)
         print(contratos)
 
+        paginator = Paginator(contratos, 20)
 
-def obtener_datos_contratos(list):
-    pass
+        data = [['# Contrato', 'Asesor', 'Cliente', 'Valor (COP)', 'saldo (COP)', 'Fecha Inicial', 'Fecha Final',
+                 'Dias restantes']]
+
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(235, 725, "Informe Contratos")
+        # Dibujar la primera imagen en la esquina superior izquierda
+        image_dir = os.path.join(settings.BASE_DIR, 'static', 'img')
+        image_path_left = os.path.join(image_dir, 'logo.jpg')
+        p.drawImage(image_path_left, x=10, y=750, width=100,
+                    height=25)  # Ajusta la posición y tamaño según tu preferencia
+
+        # Dibujar la segunda imagen en la esquina superior derecha
+        image_path_right = os.path.join(image_dir, 'logo.jpg')
+        p.drawImage(image_path_right, x=letter[0] - 110, y=750, width=100,
+                    height=25)  # Ajusta la posición y tamaño según tu preferencia
+        for page_num in paginator.page_range:
+            page_contratos = paginator.page(page_num)
+            for contrato in page_contratos:
+                data.append([
+                    contrato.numero_contrato,
+                    contrato.asesor,
+                    contrato.cliente.nombre,
+                    locale.format_string("%.0f", contrato.valor, grouping=True),
+                    locale.format_string("%.0f", saldo_pagos(contrato.numero_contrato)[2], grouping=True),
+                    contrato.fecha_inicial.strftime('%d/%m/%Y') if contrato.fecha_inicial else '',
+                    contrato.fecha_final.strftime('%d/%m/%Y') if contrato.fecha_final else contrato.fecha_final,
+                    (contrato.fecha_final - datetime.date.today()).days if contrato.fecha_final else None
+                ])
+
+            print('numero pagina', page_num)
+
+
+            table = Table(data, rowHeights=[30] * len(data))
+
+            # Calcular la posición horizontal para centrar la tabla
+            table_width, table_height = table.wrapOn(p, 0, 0)
+            x_position = (letter[0] - table_width) / 2
+
+            style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Alinear verticalmente al centro
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ])
+
+            table.setStyle(style)
+            table.wrapOn(p, 0, 0)
+
+            p.setFont("Helvetica", 10)
+            p.drawString(300, 10, f"{page_num}")
+
+            if page_num > 1:
+                table.drawOn(p, x_position, 730-(len(data)*30))  # Usar la posición calculada
+            else:
+                table.drawOn(p, x_position, 680 - (len(data) * 30))
+
+            # Guardar página y limpiar datos para la siguiente página
+            p.showPage()
+            data = [['# Contrato', 'Asesor', 'Cliente', 'Valor (COP)', 'saldo (COP)', 'Fecha Inicial', 'Fecha Final', 'Dias restantes']]
+
+
+
+        p.save()
+        buffer.seek(0)
+        print(buffer)
+        return FileResponse(buffer, as_attachment=True, filename="informe_contratos.pdf")
+
+
 class ContratosListJson(BaseDatatableView):
     model = Contratos
 
@@ -85,8 +180,6 @@ class ContratosListJson(BaseDatatableView):
         search_fecha_start = self.request.GET.get('search_fecha_start', None)
         search_fecha_end = self.request.GET.get('search_fecha_end', None)
 
-
-
         # Creando el Query por fecha
         filtro_fecha = Q()
         try:
@@ -106,7 +199,7 @@ class ContratosListJson(BaseDatatableView):
         # Creando el resto de filtros y creando una lista con ellos
         filtros = [
             Q(numero_contrato=search_contrato),
-            Q(asesor__icontains=search_asesor),
+            Q(asesor=search_asesor),
             filtro_fecha,
         ]
 
@@ -157,6 +250,7 @@ class ContratosListJson(BaseDatatableView):
 
 
 def home(request):
+
     return render(request, "proyectoCartera/contratos/Home.html")
 
 
@@ -438,9 +532,6 @@ class PagosListJson(BaseDatatableView):
                 filtro_fecha = Q(fecha_pago__range=(fecha_inicio, fecha_fin))
         except:
             print("No se pudo crear el filtro de fecha pagos")
-
-
-
 
         # Creando el resto de filtros y creando una lista con ellos
         filtros = [
