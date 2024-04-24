@@ -114,7 +114,6 @@ def pdf_contratos(request):
 
             print('numero pagina', page_num)
 
-
             table = Table(data, rowHeights=[30] * len(data))
 
             # Calcular la posición horizontal para centrar la tabla
@@ -128,9 +127,17 @@ def pdf_contratos(request):
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Alinear verticalmente al centro
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+
                 ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ])
+            rowNumb = len(data)
+            for row in range(1, rowNumb):
+                if row % 2 == 0:
+                    table_background = colors.lightgrey
+                else:
+                    table_background = colors.white
+
+                style.add('BACKGROUND', (0, row), (-1, row), table_background)
 
             table.setStyle(style)
             table.wrapOn(p, 0, 0)
@@ -139,20 +146,224 @@ def pdf_contratos(request):
             p.drawString(300, 10, f"{page_num}")
 
             if page_num > 1:
-                table.drawOn(p, x_position, 730-(len(data)*30))  # Usar la posición calculada
+                table.drawOn(p, x_position, 730 - (len(data) * 30))  # Usar la posición calculada
             else:
                 table.drawOn(p, x_position, 680 - (len(data) * 30))
 
             # Guardar página y limpiar datos para la siguiente página
             p.showPage()
-            data = [['# Contrato', 'Asesor', 'Cliente', 'Valor (COP)', 'saldo (COP)', 'Fecha Inicial', 'Fecha Final', 'Dias restantes']]
-
-
+            data = [['# Contrato', 'Asesor', 'Cliente', 'Valor (COP)', 'saldo (COP)', 'Fecha Inicial', 'Fecha Final',
+                     'Dias restantes']]
 
         p.save()
         buffer.seek(0)
         print(buffer)
         return FileResponse(buffer, as_attachment=True, filename="informe_contratos.pdf")
+
+
+def pdf_contrato_especifico(request):
+    if request.method == 'POST':
+        numero_contrato = request.POST.get('numero_contrato')
+        print('Numero contrato ver: ', numero_contrato)
+        sub_contrato = AdicionContrato.objects.filter(contrato__numero_contrato=numero_contrato)
+        contrato = Contratos.objects.get(numero_contrato=numero_contrato)
+        pagos = Pagos.objects.filter(contrato__numero_contrato=numero_contrato)
+        print(sub_contrato)
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(230, 725, f"Informe contrato")
+
+        image_dir = os.path.join(settings.BASE_DIR, 'static', 'img')
+        image_path_left = os.path.join(image_dir, 'logo.jpg')
+        p.drawImage(image_path_left, x=10, y=750, width=100,
+                    height=25)
+
+        image_path_right = os.path.join(image_dir, 'logo.jpg')
+        p.drawImage(image_path_right, x=letter[0] - 110, y=750, width=100,
+                    height=25)
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(30, 680, '# Contrato : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(100, 680, f"{contrato.numero_contrato}")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(30, 655, 'Asesor : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(80, 655, f"{contrato.asesor}")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(30, 630, 'Cliente : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(80, 630, f"{contrato.cliente}")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(30, 605, 'Fecha inicial : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(110, 605,
+                     f"{contrato.fecha_inicial.strftime('%d de %B del %Y') if contrato.fecha_inicial else contrato.fecha_inicial}")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(30, 580, 'Fecha final : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(103, 580,
+                     f"{contrato.fecha_final.strftime('%d de %B del %Y') if contrato.fecha_final else contrato.fecha_final}")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(340, 680, 'Valor inicial : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(420, 680, f"{locale.format_string('%.0f', contrato.valor, grouping=True)} (COP)")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(340, 655, 'Valor sub-contratos : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(465, 655, f"{locale.format_string('%.0f', contrato.valor_subcontratos, grouping=True)} (COP)")
+
+        info_pagos = saldo_pagos(numero_contrato)
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(340, 630, 'Valor Total : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(420, 630, f"{locale.format_string('%.0f', info_pagos[4], grouping=True)} (COP)")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(340, 605, 'Pagos Realizados : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(457, 605, f"{locale.format_string('%.0f', info_pagos[1], grouping=True)} (COP)")
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(340, 580, 'Saldo : ')
+        p.setFont("Helvetica", 12)
+        p.drawString(385, 580, f"{locale.format_string('%.0f', info_pagos[2], grouping=True)} (COP)")
+
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(35, 540, f"Tabla sub-contratos")
+
+        paginator = Paginator(sub_contrato, 10)
+        contador = None
+        data = [['# Contrato', 'Valor (COP)', 'Fecha']]
+        position_y = None
+        for page_num in paginator.page_range:
+
+            page_sub_contratos = paginator.page(page_num)
+            for sub_contrato_item in page_sub_contratos:
+                data.append([
+                    sub_contrato_item.contrato.numero_contrato,
+                    locale.format_string("%.0f", sub_contrato_item.nuevo_valor,
+                                         grouping=True) if sub_contrato_item.nuevo_valor else 'No especificado',
+                    sub_contrato_item.nueva_fecha.strftime('%d de %B del %Y') if sub_contrato_item.nueva_fecha else 'No especificado',
+                ])
+
+            table = Table(data, colWidths=[180] * 3, rowHeights=[30] * len(data))
+
+            # Calcular la posición horizontal para centrar la tabla
+            table_width, table_height = table.wrapOn(p, 0, 0)
+            x_position = (letter[0] - table_width) / 2
+
+            style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Alinear verticalmente al centro
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ])
+            rowNumb = len(data)
+            for row in range(1, rowNumb):
+                if row % 2 == 0:
+                    table_background = colors.lightgrey
+                else:
+                    table_background = colors.white
+
+                style.add('BACKGROUND', (0, row), (-1, row), table_background)
+
+            table.setStyle(style)
+            table.wrapOn(p, 0, 0)
+            if page_num > 1:
+                table.drawOn(p, x_position, 720 - (len(data) * 30))  # Usar la posición calculada
+                position_y = 720 - (len(data) * 30)
+            else:
+                table.drawOn(p, x_position, 530 - (len(data) * 30))
+                position_y = 530 - (len(data) * 30)
+
+
+
+            p.setFont("Helvetica", 10)
+            p.drawString(300, 10, f"{page_num}")
+
+
+            data = [['# Contrato', 'Valor (COP)', 'Fecha']]
+            # if page_num != paginator.page_range.stop - 1:
+            #     p.showPage()
+            p.showPage()
+            contador = page_num
+
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(35, 730, f"Tabla Pagos")
+        #desde aqui es la segunda tabla
+        paginator = Paginator(pagos, 10)
+
+        data = [['Tipo de pago', 'Valor de pago (COP)', 'Fecha de pago']]
+
+        for page_num in paginator.page_range:
+            page_sub_contratos = paginator.page(page_num)
+            for sub_contrato_item in page_sub_contratos:
+                data.append([
+                    sub_contrato_item.get_tipo_pago_display(),
+                    locale.format_string("%.0f", sub_contrato_item.valor_pago,
+                                         grouping=True) if sub_contrato_item.fecha_pago else 'No especificado',
+                    sub_contrato_item.fecha_pago.strftime(
+                        '%d de %B del %Y') if sub_contrato_item.fecha_pago else 'No especificado',
+                ])
+
+            table = Table(data, colWidths=[180] * 3, rowHeights=[30] * len(data))
+
+            # Calcular la posición horizontal para centrar la tabla
+            table_width, table_height = table.wrapOn(p, 0, 0)
+            x_position = (letter[0] - table_width) / 2
+
+            style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Alinear verticalmente al centro
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ])
+
+            rowNumb = len(data)
+            for row in range(1, rowNumb):
+                if row % 2 == 0:
+                    table_background = colors.lightgrey
+                else:
+                    table_background = colors.white
+
+                style.add('BACKGROUND', (0, row), (-1, row), table_background)
+
+            table.setStyle(style)
+            table.wrapOn(p, 0, 0)
+
+            if page_num > 1:
+                table.drawOn(p, x_position, 720 - (len(data) * 30))  # Usar la posición calculada
+            else:
+                table.drawOn(p, x_position, 720 - (len(data) * 30) )
+
+            p.setFont("Helvetica", 10)
+            p.drawString(300, 10, f"{page_num + contador}")
+
+
+            data = [['Tipo de pago', 'Valor de pago (COP)', 'Fecha de pago']]
+
+            p.showPage()
+
+
+        p.save()
+        buffer.seek(0)
+        return FileResponse(buffer, as_attachment=True, filename="hello.pdf")
 
 
 class ContratosListJson(BaseDatatableView):
@@ -250,7 +461,6 @@ class ContratosListJson(BaseDatatableView):
 
 
 def home(request):
-
     return render(request, "proyectoCartera/contratos/Home.html")
 
 

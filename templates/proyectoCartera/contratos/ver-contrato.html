@@ -5,6 +5,9 @@
 
 {% block body %}
     <div class="conteiner">
+        <form method="post">
+            {% csrf_token %}
+        </form>
         <div class="row justify-content-center">
             <div class="card shadow-lg o-hidden border-0 my-1">
                 <div class="card-body">
@@ -47,6 +50,13 @@
                                             <span class="fw-bold"> Pagos realizados : </span> {{ informacion_pagos.1 }}
                                             (COP)
                                         </div>
+
+                                    </div>
+                                    <div class="row py-4 fs-6">
+                                        <button type="button" class="btn btn-primary"
+                                                onclick="informe_contrato_especifico({{ informacion_contrato.numero_contrato }})">
+                                            PDF informe contrato especifico
+                                        </button>
                                     </div>
                                 </fieldset>
                             </div>
@@ -72,10 +82,10 @@
                                 </div>
                                 <div class="col fs-6">
                                     <div class="row py-4">
-                                <button type="button" class="btn btn-dark" onclick="borrarFiltros()">Borrar
-                                    filtros
-                                </button>
-                            </div>
+                                        <button type="button" class="btn btn-dark" onclick="borrarFiltros()">Borrar
+                                            filtros
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -129,13 +139,34 @@
 
 
     <script>
-        //tabla pagos
+        function informe_contrato_especifico(numero_contrato) {
+            console.log(numero_contrato)
+            var csrftoken = $('input[name=csrfmiddlewaretoken]').val();
+            $.ajax({
+                url: '{% url "carteraApp_pdf_contrato_especifico" %}',
+                type: 'POST',
+                headers: {'X-CSRFToken': csrftoken},
+                data: {
+                    'numero_contrato': numero_contrato
+                },
+                success: function (response) {
+                    var blob = new Blob([response], {type: 'application/pdf'});
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = `informe_contrato_${numero_contrato}`; // Nombre del archivo para descargar
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+
+            });
+        }
 
         let tablaPagos = $('#tabla_pagos').DataTable({
             pageLength: 5,
             responsive: true,
             serverSide: true,
-            processing: true,
+
             searching: false,
             lengthChange: false,
 
@@ -242,7 +273,6 @@
                 pageLength: 5,
                 responsive: true,
                 serverSide: true,
-                processing: true,
                 searching: false,
                 lengthChange: false,
                 ajax: '{% url "carteraApp_subcontratos_data" informacion_contrato.numero_contrato %}',

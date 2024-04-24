@@ -25,6 +25,7 @@ urlpatterns = [
     path('filtro_contrato/', views.filtro_contratos, name='carteraApp_filtro_contrato'),
     path('obtener_opciones_filtros/<tabla>/', views.obtener_opciones_filtros, name='carteraApp_obtener_opciones_filtros'),
     path('pdf/', views.pdf_contratos, name='carteraApp_pdf'),
+    path('pdf_contrato_especifico/', views.pdf_contrato_especifico, name='carteraApp_pdf_contrato_especifico'),
 
 ]
 
