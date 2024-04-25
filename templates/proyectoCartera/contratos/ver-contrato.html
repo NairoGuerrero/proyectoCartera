@@ -103,6 +103,12 @@
                                 {% endif %}
 
                             </div>
+                            <div class="row m-3 ">
+                                <button type="button" class="btn btn-primary"
+                                        onclick="informe_pagos({{ informacion_contrato.numero_contrato }})">
+                                    PDF informe Pagos
+                                </button>
+                            </div>
 
                         </fieldset>
                     </div>
@@ -139,6 +145,39 @@
 
 
     <script>
+        function informe_pagos(numero_contrato) {
+            var numero_contrato = numero_contrato
+            var tipo_pago = $('#searchTipoPgo').val();
+            const dateRangeValue = $('#searchFecha').val();
+            const dateRangeArray = dateRangeValue.split(' to ');
+            const startDate = dateRangeArray[0];
+            const endDate = dateRangeArray[1];
+            var search_fecha_start = startDate;
+            var search_fecha_end = endDate;
+            var csrftoken = $('input[name=csrfmiddlewaretoken]').val();
+
+            $.ajax({
+                url: '{% url "carteraApp_pdf_pagos" %}',
+                type: 'POST',
+                headers: {'X-CSRFToken': csrftoken},
+                data: {
+                    'numero_contrato': numero_contrato,
+                    'tipo_pago': tipo_pago,
+                    'search_fecha_start': search_fecha_start,
+                    'search_fecha_end': search_fecha_end
+                },
+                success: function (response) {
+                    var blob = new Blob([response], {type: 'application/pdf'});
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = "informe_contratos.pdf"; // Nombre del archivo para descargar
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+        }
+
         function informe_contrato_especifico(numero_contrato) {
             console.log(numero_contrato)
             var csrftoken = $('input[name=csrfmiddlewaretoken]').val();

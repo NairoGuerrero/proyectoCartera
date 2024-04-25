@@ -83,21 +83,20 @@ def pdf_contratos(request):
 
         data = [['# Contrato', 'Asesor', 'Cliente', 'Valor (COP)', 'saldo (COP)', 'Fecha Inicial', 'Fecha Final',
                  'Dias restantes']]
+        fecha_actual = datetime.datetime.now()
 
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(235, 725, "Informe Contratos")
+        p.setFont("Helvetica-Bold", 20)
+        p.drawString(280, 750, "Informe Contratos")
+        p.setFont("Helvetica", 10)
+        p.drawString(290, 730, f"Generado el {fecha_actual.strftime('%d de %B del %Y')}")
         # Dibujar la primera imagen en la esquina superior izquierda
         image_dir = os.path.join(settings.BASE_DIR, 'static', 'img')
         image_path_left = os.path.join(image_dir, 'logo.jpg')
-        p.drawImage(image_path_left, x=10, y=750, width=100,
-                    height=25)  # Ajusta la posición y tamaño según tu preferencia
+        p.drawImage(image_path_left, x=80, y=720, width=150,
+                    height=40)  # Ajusta la posición y tamaño según tu preferencia
 
-        # Dibujar la segunda imagen en la esquina superior derecha
-        image_path_right = os.path.join(image_dir, 'logo.jpg')
-        p.drawImage(image_path_right, x=letter[0] - 110, y=750, width=100,
-                    height=25)  # Ajusta la posición y tamaño según tu preferencia
         for page_num in paginator.page_range:
             page_contratos = paginator.page(page_num)
             for contrato in page_contratos:
@@ -161,6 +160,120 @@ def pdf_contratos(request):
         return FileResponse(buffer, as_attachment=True, filename="informe_contratos.pdf")
 
 
+def pdf_pagos(request):
+    if request.method == 'POST':
+        numero_contrato = request.POST.get('numero_contrato')
+        tipo_pago = request.POST.get('tipo_pago')
+        search_fecha_start = request.POST.get('search_fecha_start')
+        search_fecha_end = request.POST.get('search_fecha_end')
+
+        filtro_numero_contrato = Q(contrato__numero_contrato=numero_contrato)
+
+        filtro_fecha = Q()
+        try:
+            if search_fecha_start is not None:
+                fecha_inicio = dt.strptime(search_fecha_start, '%Y-%m-%d')
+
+                if search_fecha_end is not None:
+                    fecha_fin = dt.strptime(search_fecha_end, '%Y-%m-%d')
+                else:
+                    fecha_fin = fecha_inicio
+
+                fecha_fin = fecha_fin.replace(hour=23, minute=59, second=59)
+                filtro_fecha = Q(fecha_pago__range=(fecha_inicio, fecha_fin))
+        except:
+            print("No se pudo crear el filtro de fecha")
+
+        filtros = [
+            filtro_numero_contrato,
+            Q(tipo_pago=tipo_pago),
+            filtro_fecha,
+        ]
+
+        filtros_validos = [filtro for filtro in filtros if filtro.children and filtro.children[0][1] != '']
+        filtro_completo = Q()
+        for filtro in filtros_validos:
+            filtro_completo &= filtro
+
+        pagos = Pagos.objects.filter(filtro_completo)
+        print(pagos)
+        paginator = Paginator(pagos, 20)
+
+        data = [['# Contrato', 'Tipo de pago', 'Valor del pago (COP)', 'Fecha de pago']]
+        fecha_actual = datetime.datetime.now()
+
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+        p.setFont("Helvetica-Bold", 20)
+        p.drawString(280, 750, "Informe Contratos")
+        p.setFont("Helvetica", 10)
+        p.drawString(290, 730, f"Generado el {fecha_actual.strftime('%d de %B del %Y')}")
+        # Dibujar la primera imagen en la esquina superior izquierda
+        image_dir = os.path.join(settings.BASE_DIR, 'static', 'img')
+        image_path_left = os.path.join(image_dir, 'logo.jpg')
+        p.drawImage(image_path_left, x=80, y=720, width=150,
+                    height=40)  # Ajusta la posición y tamaño según tu preferencia
+
+        for page_num in paginator.page_range:
+            page_contratos = paginator.page(page_num)
+            for pago in page_contratos:
+                print(pago)
+                data.append([
+                    numero_contrato,
+                    pago.tipo_pago,
+                    locale.format_string("%.0f", pago.valor_pago, grouping=True),
+                    pago.fecha_pago.strftime('%d de %B del %Y') if pago.fecha_pago else 'No especificado',
+                ])
+
+            print('numero pagina', page_num)
+
+            table = Table(data,colWidths=[140] * 3, rowHeights=[30] * len(data))
+
+            # Calcular la posición horizontal para centrar la tabla
+            table_width, table_height = table.wrapOn(p, 0, 0)
+            x_position = (letter[0] - table_width) / 2
+
+            style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # Alinear verticalmente al centro
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ])
+            rowNumb = len(data)
+            for row in range(1, rowNumb):
+                if row % 2 == 0:
+                    table_background = colors.lightgrey
+                else:
+                    table_background = colors.white
+
+                style.add('BACKGROUND', (0, row), (-1, row), table_background)
+
+            table.setStyle(style)
+            table.wrapOn(p, 0, 0)
+
+            p.setFont("Helvetica", 10)
+            p.drawString(300, 10, f"{page_num}")
+
+            if page_num > 1:
+                table.drawOn(p, x_position, 730 - (len(data) * 30))  # Usar la posición calculada
+            else:
+                table.drawOn(p, x_position, 680 - (len(data) * 30))
+
+            # Guardar página y limpiar datos para la siguiente página
+            p.showPage()
+
+            data = [['# Contrato', 'Tipo de pago', 'Valor del pago (COP)', 'Fecha de pago']]
+
+        p.save()
+        buffer.seek(0)
+        print(buffer)
+        return FileResponse(buffer, as_attachment=True, filename="informe_contratos.pdf")
+
+
 def pdf_contrato_especifico(request):
     if request.method == 'POST':
         numero_contrato = request.POST.get('numero_contrato')
@@ -169,19 +282,21 @@ def pdf_contrato_especifico(request):
         contrato = Contratos.objects.get(numero_contrato=numero_contrato)
         pagos = Pagos.objects.filter(contrato__numero_contrato=numero_contrato)
         print(sub_contrato)
+        fecha_actual = datetime.datetime.now()
+
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=letter)
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(230, 725, f"Informe contrato")
-
+        p.setFont("Helvetica-Bold", 18)
+        p.drawString(260, 750, "Informe Contrato ")
+        p.setFont("Helvetica-Bold", 18)
+        p.drawString(415, 750, f"# {numero_contrato}")
+        p.setFont("Helvetica", 10)
+        p.drawString(290, 730, f"Generado el {fecha_actual.strftime('%d de %B del %Y')}")
+        # Dibujar la primera imagen en la esquina superior izquierda
         image_dir = os.path.join(settings.BASE_DIR, 'static', 'img')
         image_path_left = os.path.join(image_dir, 'logo.jpg')
-        p.drawImage(image_path_left, x=10, y=750, width=100,
-                    height=25)
-
-        image_path_right = os.path.join(image_dir, 'logo.jpg')
-        p.drawImage(image_path_right, x=letter[0] - 110, y=750, width=100,
-                    height=25)
+        p.drawImage(image_path_left, x=80, y=720, width=150,
+                    height=40)  # Ajusta la posición y tamaño según tu preferencia
 
         p.setFont("Helvetica-Bold", 12)
         p.drawString(30, 680, '# Contrato : ')
@@ -252,7 +367,8 @@ def pdf_contrato_especifico(request):
                     sub_contrato_item.contrato.numero_contrato,
                     locale.format_string("%.0f", sub_contrato_item.nuevo_valor,
                                          grouping=True) if sub_contrato_item.nuevo_valor else 'No especificado',
-                    sub_contrato_item.nueva_fecha.strftime('%d de %B del %Y') if sub_contrato_item.nueva_fecha else 'No especificado',
+                    sub_contrato_item.nueva_fecha.strftime(
+                        '%d de %B del %Y') if sub_contrato_item.nueva_fecha else 'No especificado',
                 ])
 
             table = Table(data, colWidths=[180] * 3, rowHeights=[30] * len(data))
@@ -288,11 +404,8 @@ def pdf_contrato_especifico(request):
                 table.drawOn(p, x_position, 530 - (len(data) * 30))
                 position_y = 530 - (len(data) * 30)
 
-
-
             p.setFont("Helvetica", 10)
             p.drawString(300, 10, f"{page_num}")
-
 
             data = [['# Contrato', 'Valor (COP)', 'Fecha']]
             # if page_num != paginator.page_range.stop - 1:
@@ -302,7 +415,7 @@ def pdf_contrato_especifico(request):
 
         p.setFont("Helvetica-Bold", 14)
         p.drawString(35, 730, f"Tabla Pagos")
-        #desde aqui es la segunda tabla
+        # desde aqui es la segunda tabla
         paginator = Paginator(pagos, 10)
 
         data = [['Tipo de pago', 'Valor de pago (COP)', 'Fecha de pago']]
@@ -350,16 +463,14 @@ def pdf_contrato_especifico(request):
             if page_num > 1:
                 table.drawOn(p, x_position, 720 - (len(data) * 30))  # Usar la posición calculada
             else:
-                table.drawOn(p, x_position, 720 - (len(data) * 30) )
+                table.drawOn(p, x_position, 720 - (len(data) * 30))
 
             p.setFont("Helvetica", 10)
             p.drawString(300, 10, f"{page_num + contador}")
 
-
             data = [['Tipo de pago', 'Valor de pago (COP)', 'Fecha de pago']]
 
             p.showPage()
-
 
         p.save()
         buffer.seek(0)
@@ -755,7 +866,7 @@ class PagosListJson(BaseDatatableView):
         # Creando el Query
         filtro_completo = Q()
         for filtro in filtros_validos:
-            filtro_completo |= filtro  # FIXME: Determinar si se quiere que sea una OR o una AND
+            filtro_completo &= filtro  # FIXME: Determinar si se quiere que sea una OR o una AND
 
         # Filtrando
         # FIXME: Arreglar el ordenamiento por saldo y días restantes
