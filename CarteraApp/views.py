@@ -77,7 +77,6 @@ def pdf_contratos(request):
         for filtro in filtros_validos:
             filtro_completo |= filtro
         contratos = Contratos.objects.filter(filtro_completo)
-        print(contratos)
 
         paginator = Paginator(contratos, 20)
 
@@ -93,7 +92,7 @@ def pdf_contratos(request):
         p.drawString(290, 730, f"Generado el {fecha_actual.strftime('%d de %B del %Y')}")
         # Dibujar la primera imagen en la esquina superior izquierda
         image_dir = os.path.join(settings.BASE_DIR, 'static', 'img')
-        image_path_left = os.path.join(image_dir, 'logo.jpg')
+        image_path_left = os.path.join(image_dir, 'LogoIngelean.png')
         p.drawImage(image_path_left, x=80, y=720, width=150,
                     height=40)  # Ajusta la posición y tamaño según tu preferencia
 
@@ -210,7 +209,7 @@ def pdf_pagos(request):
         p.drawString(290, 730, f"Generado el {fecha_actual.strftime('%d de %B del %Y')}")
         # Dibujar la primera imagen en la esquina superior izquierda
         image_dir = os.path.join(settings.BASE_DIR, 'static', 'img')
-        image_path_left = os.path.join(image_dir, 'logo.jpg')
+        image_path_left = os.path.join(image_dir, 'LogoIngelean.png')
         p.drawImage(image_path_left, x=80, y=720, width=150,
                     height=40)  # Ajusta la posición y tamaño según tu preferencia
 
@@ -294,7 +293,7 @@ def pdf_contrato_especifico(request):
         p.drawString(290, 730, f"Generado el {fecha_actual.strftime('%d de %B del %Y')}")
         # Dibujar la primera imagen en la esquina superior izquierda
         image_dir = os.path.join(settings.BASE_DIR, 'static', 'img')
-        image_path_left = os.path.join(image_dir, 'logo.jpg')
+        image_path_left = os.path.join(image_dir, 'LogoIngelean.png')
         p.drawImage(image_path_left, x=80, y=720, width=150,
                     height=40)  # Ajusta la posición y tamaño según tu preferencia
 
