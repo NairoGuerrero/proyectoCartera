@@ -6,12 +6,15 @@
 
 {% block body %}
 
-    <div class="m-3">
-        <table id="example" class="display nowrap"></table>
+    <div class="container my-3">
+        <div class="text-center">
+            <table id="example" class="display nowrap nowrap cell-border table-striped"></table>
+        </div>
+        <div class="my-3 d-grid">
+            <a href="{% url 'carteraApp_agregar_cliente' %}" class="btn btn-primary"> Agregar Cliente </a>
+        </div>
     </div>
-    <div class="row m-3">
-        <a href="{% url 'carteraApp_agregar_cliente' %}" class="btn btn-primary"> Agregar Cliente </a>
-    </div>
+
     <script>
         $(document).ready(function () {
             $('#example').DataTable({

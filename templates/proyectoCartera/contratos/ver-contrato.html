@@ -91,9 +91,9 @@
 
                             <div class="table-responsive p-3 text-center">
                                 <table id="tabla_pagos"
-                                       class="display nowrap cell-border table-bordered table-striped mx-auto"></table>
+                                       class="display nowrap cell-border table-striped"></table>
                             </div>
-                            <div class="row m-3">
+                            <div class="d-grid my-3">
                                 {% if informacion_pagos.5 > 0 %}
                                     <a href='{% url 'carteraApp_agregar_pago' informacion_contrato.numero_contrato %}'
                                        class="btn btn-primary">Realizar
@@ -103,7 +103,7 @@
                                 {% endif %}
 
                             </div>
-                            <div class="row m-3 ">
+                            <div class="d-grid my-3">
                                 <button type="button" class="btn btn-primary"
                                         onclick="informe_pagos({{ informacion_contrato.numero_contrato }})">
                                     PDF informe Pagos
@@ -117,9 +117,9 @@
                             <legend class="fw-bold">Sub-Contratos Realizados</legend>
                             <div class="table-responsive p-3 text-center">
                                 <table id="tabla_subcontratos"
-                                       class="display compact cell-border table-bordered table-striped mx-auto"></table>
+                                       class="display compact cell-border table-striped"></table>
                             </div>
-                            <div class="row m-3">
+                            <div class="d-grid my-3">
                                 <a href="{% url 'carteraApp_agregar_subcontrato' informacion_contrato.numero_contrato %}"
                                    class="btn btn-primary"> Agregar sub-contrato</a>
                             </div>

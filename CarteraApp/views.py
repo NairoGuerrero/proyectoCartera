@@ -226,7 +226,7 @@ def pdf_pagos(request):
 
             print('numero pagina', page_num)
 
-            table = Table(data,colWidths=[140] * 3, rowHeights=[30] * len(data))
+            table = Table(data, colWidths=[140] * 3, rowHeights=[30] * len(data))
 
             # Calcular la posición horizontal para centrar la tabla
             table_width, table_height = table.wrapOn(p, 0, 0)
@@ -544,7 +544,7 @@ class ContratosListJson(BaseDatatableView):
         return qs
 
     def prepare_results(self, qs):
-        locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+        locale.setlocale(locale.LC_ALL, 'en_US.utf8')
         prueba = []
         today = datetime.date.today()
 
@@ -737,7 +737,7 @@ def editar_cliente_vista(request, cedula):
 
 def pagos(request, numero_contrato):
     # Configurar locale para formatear el número con separadores de miles
-    locale.setlocale(locale.LC_ALL, '')
+    locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 
     datos = saldo_pagos(numero_contrato)
     pagos = list(Pagos.objects.filter(contrato__numero_contrato=numero_contrato).values())
@@ -878,7 +878,7 @@ class PagosListJson(BaseDatatableView):
         return qs
 
     def prepare_results(self, qs):
-        locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+        locale.setlocale(locale.LC_ALL, 'en_US.utf8')
         data = []
         today = datetime.date.today()
 
@@ -943,7 +943,7 @@ class SubContratosListJson(BaseDatatableView):
         return qs
 
     def prepare_results(self, qs):
-        locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+        locale.setlocale(locale.LC_ALL, 'en_US.utf8')
         data = []
         today = datetime.date.today()
 
@@ -995,7 +995,7 @@ def agregar_subcontrato(request, numero_contrato):
 
 
 def ver_contrato(request, numero_contrato):
-    locale.setlocale(locale.LC_ALL, 'es_CO.UTF-8')
+    locale.setlocale(locale.LC_ALL, 'en_US.utf8')
     try:
 
         contrato = Contratos.objects.get(numero_contrato=numero_contrato)

@@ -15,19 +15,19 @@
                 <div class="card-body">
                     <div class="row d-flex justify-content-center my-0" style="margin: 50px;">
                         <div class="col p-3">
-                            <fieldset class="border  border-2 border-dark  p-4">
+                            <fieldset class="border border-2 border-dark  p-4">
                                 <legend class="fw-bold">Filtros</legend>
                                 <div class="row m-3">
-                                    <div class="col-2 fs-6">
+                                    <div class="col-3 fs-6 d-grid">
                                         <span class="fw-bold"> Contrato : </span>
-                                        <select class="searchContrato js-states form-control" id="searchContrato"
+                                        <select class="searchContrato" id="searchContrato"
                                                 name="state">
                                             <option value="">Selecciona un contrato...</option>
                                         </select>
                                     </div>
-                                    <div class="col-2 fs-6">
+                                    <div class="col-3 fs-6 d-grid">
                                         <span class="fw-bold"> Asesor : </span>
-                                        <select class="searchAsesor js-states form-control form-select"
+                                        <select class="searchAsesor"
                                                 id="searchAsesor"
                                                 name="state">
                                             <option value="">Selecciona un asesor...</option>
@@ -42,33 +42,34 @@
 
 
                                     <div class="col-2">
-                                        <span class="fw-bold">Ordenar : </span>
-                                        <select class="form-select" id="sortBy" aria-label="Default select example">
-                                            <option selected disabled value="">Ordenar por...</option>
-                                            <option value="numero_contrato">Contrato</option>
-                                            <option value="asesor">Asesor</option>
-                                            <option value="cliente">Cliente</option>
-                                            <option value="valor">Valor</option>
-                                            <option value="fecha_inicial">Fecha inicial</option>
-                                            <option value="fecha_final">Fecha final</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-1">
-                                        <input type="checkbox" class="btn-check" id="sortingDirection"
-                                               autocomplete="off">
-                                        <label class="btn btn-outline-primary" for="sortingDirection">
-                                            <i class="bi bi-funnel-fill"></i>
-                                        </label>
-                                    </div>
-
-                                    <div class="col-2 fs-6">
                                         <div class="row">
-                                            <button type="button" class="btn btn-dark" onclick="borrarFiltros()">
-                                                Borrar
-                                                filtros
-                                            </button>
+                                            <div class="col-8 m-0 p-0">
+                                                <span class="fw-bold">Ordenar : </span>
+                                                <select class="form-select" id="sortBy"
+                                                        aria-label="Default select example">
+                                                    <option selected disabled value="">Ordenar por...</option>
+                                                    <option value="numero_contrato">Contrato</option>
+                                                    <option value="asesor">Asesor</option>
+                                                    <option value="cliente">Cliente</option>
+                                                    <option value="valor">Valor</option>
+                                                    <option value="fecha_inicial">Fecha inicial</option>
+                                                    <option value="fecha_final">Fecha final</option>
+                                                </select>
+                                            </div>
+                                            <div class="col m-0 p-0 d-flex justify-content-start align-items-end">
+                                                <input type="checkbox" class="btn-check" id="sortingDirection"
+                                                       autocomplete="off">
+                                                <label class="btn btn-outline-primary" for="sortingDirection">
+                                                    <i class="bi bi-funnel-fill"></i>
+                                                </label>
+                                            </div>
                                         </div>
+                                    </div>
+                                    <div class="col-1 d-grid">
+                                        <button type="button" class="btn btn-dark" onclick="borrarFiltros()">
+                                            Borrar
+                                            filtros
+                                        </button>
                                     </div>
                                 </div>
                             </fieldset>
@@ -78,15 +79,15 @@
                             <fieldset class="border  border-2 border-dark  p-4">
                                 <legend class="fw-bold">Contratos</legend>
                                 <div class="container">
-                                    <div class="ext-center">
+                                    <div class="text-center">
                                         <table id="tablaContratos"
-                                               class="display nowrap cell-border table-bordered table-striped mx-auto"></table>
+                                               class="display nowrap cell-border table-striped"></table>
                                     </div>
-                                    <div class="row m-3">
+                                    <div class="d-grid my-3">
                                         <a href="{% url 'carteraApp_agregar_contrato' %}" class="btn btn-primary">
                                             Agregar Contrato </a>
                                     </div>
-                                    <div class="row m-3">
+                                    <div class="d-grid my-3">
                                         <button class="btn btn-primary" onclick="enviarDatos()"> PDF</button>
                                     </div>
                                 </div>
