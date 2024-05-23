@@ -38,7 +38,7 @@ class Pagos(models.Model):
     tipo_pago_opciones = [
         ('recibo_de_caja_efectivo', 'Recibo de caja - Efectivo'),
         ('recibo_de_caja_banco', 'Recibo de caja -  Banco'),
-        ('abono', ' Abono')
+        ('recibo_de_caja_cruce', 'Recibo de caja -  Cruce')
     ]
     contrato = models.ForeignKey(Contratos, on_delete=models.PROTECT)
     tipo_pago = models.CharField(max_length=50, choices=tipo_pago_opciones)
