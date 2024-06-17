@@ -236,7 +236,10 @@
             columns: [
                 {data: 'contrato', title: '# Contrato', visible: false},
                 {data: 'tipo_pago', title: 'Tipo de pago'},
-                {data: 'valor_pago', title: 'Valor del pago (COP)'},
+                {
+                    data: 'valor_pago', title: 'Valor del pago (COP)',
+
+                },
                 {data: 'fecha_pago', title: 'Fecha del pago'},
                 {
                     data: 'archivo_pago', title: 'Archivo Pago', orderable: false,
@@ -248,13 +251,23 @@
                         }
                     }
                 },
+                {data: 'descripcion_pago', title: 'Discripción'},
                 {
                     data: null, title: 'Opciones', orderable: false,
                     render: function (data, type, row, meta) {
                         return '<button class="btn btn-info" onclick=" editarPago(' + row.id + ')">Editar</button> ';
                     }
                 }
-            ]
+            ],
+            createdRow: function (row, data, dataIndex) {
+                console.log(typeof (data.valor_pago))
+                if (parseInt(data.valor_pago) < 0) {
+                    $('td', row).eq(1).css({
+                        'color': 'white',
+                        'background-color': '#fb5151'
+                    });
+                }
+            }
         });
 
         $(document).ready(function () {

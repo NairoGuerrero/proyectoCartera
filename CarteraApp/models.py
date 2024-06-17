@@ -45,3 +45,4 @@ class Pagos(models.Model):
     valor_pago = models.IntegerField()
     fecha_pago = models.DateField()
     archivo_pago = models.FileField(upload_to='Recibos/')
+    descripcion_pago = models.CharField(max_length=20, default='')

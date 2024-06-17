@@ -698,41 +698,7 @@ def editar_cliente_vista(request, cedula):
     return render(request, "proyectoCartera/clientes/EditarCliente.html", data)
 
 
-# class PagosListJson(BaseDatatableView):
-#     model = Pagos
-#     columns = ['numero_contrato', 'tipo_pago', 'cliente', 'valor_pago', 'fecha_pago', 'archivo_pago']
-#
-#     def dispatch(self, request, *args, **kwargs):
-#         try:
-#             return super(PagosListJson, self).dispatch(request, *args, **kwargs)
-#
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)})
-#
-#     def render_column(self, row, column):
-#         if column in ['fecha_pago']:
-#             return getattr(row, column).strftime('%Y-%m-%d') if getattr(row, column) else ''
-#         else:
-#             return super(PagosListJson, self).render_column(row, column)
-#
-#     def prepare_results(self, qs):
-#         data = []
-#
-#         for item in qs:
-#             try:
-#                 archivo = item.archivo_pago.url
-#             except:
-#                 archivo = ''
-#
-#             data.append({
-#                 'numero_contrato': item.numero_contrato.numero_contrato,
-#                 'tipo_pago': item.tipo_pago,
-#                 'cliente': 'nose',
-#                 'valor_pago': item.valor_pago,
-#                 'fecha_pago': item.fecha_pago.strftime('%Y-%m-%d') if item.fecha_pago else '',
-#                 'archivo_pago': archivo
-#             })
-#         return data
+
 
 
 def pagos(request, numero_contrato):
@@ -889,6 +855,7 @@ class PagosListJson(BaseDatatableView):
                 'tipo_pago': item.get_tipo_pago_display(),
                 'valor_pago': locale.format_string("%.0f", item.valor_pago, grouping=True),
                 'fecha_pago': item.fecha_pago.strftime('%d de %B del %Y') if item.fecha_pago else item.fecha_pago,
+                'descripcion_pago': item.descripcion_pago if item.descripcion_pago != '' else 'No especificado',
                 'archivo_pago': item.archivo_pago.url
 
             })

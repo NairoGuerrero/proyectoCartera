@@ -1,6 +1,7 @@
 from datetime import date
 from django import forms
 from .models import *
+from datetime import date
 
 
 class crear_cliente(forms.ModelForm):
@@ -39,13 +40,14 @@ class CrearContrato(forms.ModelForm):
 
 
 class ActualizarContrato(forms.ModelForm):
+
     class Meta:
         model = Contratos
         fields = '__all__'
         widgets = {
             'fecha_inicial': forms.DateInput(
                 attrs={'type': 'date', 'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
-            'fecha_final': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_final': forms.DateInput(attrs={'type': 'date', 'min': date.today()}),
             'numero_contrato': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
             'cliente': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
             'valor': forms.TextInput(attrs={'readonly': 'readonly', 'style': 'background-color: #f2f2f2'}),
@@ -97,7 +99,6 @@ class AgregarSubContrato(forms.ModelForm):
         widgets = {
             'nueva_fecha': forms.DateInput(attrs={'type': 'date'}),
             'contrato': forms.HiddenInput(),
-
         }
 
 
