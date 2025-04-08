@@ -2,7 +2,7 @@
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
     <data-source source="LOCAL" name="ProyectoCarteraApp" uuid="6117c855-b288-4102-abdb-079e87ca8d40">
-      <driver-ref>sqlite.xerial</driver-ref>
+      <driver-ref>f3739db2-4f58-491f-aa11-9534daf7daa4</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:C:\Users\nairo\Desktop\proyectoCartera\ProyectoCarteraApp.db</jdbc-url>

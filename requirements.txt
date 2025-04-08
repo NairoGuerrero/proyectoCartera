@@ -1,2 +1,0 @@
-django~=5.0.1
-django-datatables-view~=1.20.0
